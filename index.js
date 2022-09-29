@@ -3,9 +3,6 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 const Trivia = require('./trivia');
 
-const express = require('express');
-const app = express();
-
 dotenv.config();
 
 const client = new Client({
@@ -43,13 +40,6 @@ client.on('messageCreate', msg => {
             setTimeout(() => trivia.startTrivia(), 500);
         }
     }
-});
-
-app.get('/', async (req,res) => {
-    console.log("ping");
-});
-app.listen(8999, () => {
-
 });
 
 client.login(process.env.DISCORD_TOKEN);
