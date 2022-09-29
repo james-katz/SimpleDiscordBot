@@ -1,0 +1,14 @@
+[
+    {
+        "question": "Qual dos nomes abaixo é considerado um dos criadores da criptomoeda Zcash?",
+        "answers":[ "Zooko Wilcox", "Satoshi Nakamoto", "Vitalik Buterin", "Steve Jobs" ]
+    },
+    {
+        "question": "Qual o fornecimento máximo da criptomoeda Zcash?",
+        "answers":[ "21 milhões", "42 milhões", "1 bilhão", "Infinito" ]
+    },
+    {
+        "question": "A sigla *zk-snarks* significa *Zero Knowledge Succint Non-Interactive Argument of Knowledge*.",
+        "answers":[ "Verdadeiro", "Falso" ]
+    }
+]

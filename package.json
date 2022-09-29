@@ -1,0 +1,16 @@
+{
+  "name": "ZecBot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "James Katz",
+  "license": "MIT",
+  "description": "A simple discord bot for creating and managing trivias.",
+  "dependencies": {
+    "discord.js": "^14.4.0",
+    "dotenv": "^16.0.3"
+  }
+}
