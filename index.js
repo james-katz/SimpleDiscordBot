@@ -25,7 +25,7 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', msg => {
-    if((msg.channelId == "1022921831981781064" || msg.channelId == "1024721291766411274") && !msg.author.bot) {
+    if(!msg.author.bot) {
         if(msg.content.includes("@here") || msg.content.includes("@everyone")) return false;
         
         if(!msg.member.roles.cache.has(process.env.ROLE_ID)) return false;
