@@ -27,7 +27,7 @@ client.once('ready', () => {
 client.on('messageCreate', msg => {
     if(!msg.author.bot) {
         if(msg.content.includes("@here") || msg.content.includes("@everyone")) return false;
-        
+        console.log('Comando recebdi');        
         if(!msg.member.roles.cache.has(process.env.ROLE_ID)) return false;
         
         let start = false;
@@ -36,6 +36,7 @@ client.on('messageCreate', msg => {
         if(cmd[0].toLowerCase() == '!startquiz') start = true;
         
         if(start) {
+            console.log('Um quiz foi iniciado');
             let trivia = new Trivia(msg, questions, cmd);
             setTimeout(() => trivia.startTrivia(), 500);
         }
