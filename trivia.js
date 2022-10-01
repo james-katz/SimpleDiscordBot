@@ -2,10 +2,9 @@ const { Client, EmbedBuilder } = require('discord.js');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageCollector, ComponentType } = require('discord.js');
 
 class Trivia {
-    constructor(msg, questions, cmd) {
+    constructor(msg, questions) {
         this.msg = msg;
         this.questions = questions;
-        this.cmd = cmd;
         this.participants = [];
     }
 
@@ -68,7 +67,7 @@ class Trivia {
 
         this.msg.channel.send( {embeds: [embedQuiz], components: [row]} )
             .then(triviaMsg => {
-                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 50000 });
+                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
                 
                 collector.on('collect', i => {                    
                     if(i.user.id === this.msg.author.id) {
