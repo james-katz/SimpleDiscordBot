@@ -9,8 +9,6 @@ const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,    
-        GatewayIntentBits.GuildMembers,    
-		GatewayIntentBits.MessageContent
     ],
  });
 
@@ -25,11 +23,6 @@ client.once('ready', () => {
 });
 
 client.on('interactionCreate', interaction => {
-    if(!interaction.member.roles.cache.has(process.env.ROLE_ID)) {
-        interaction.reply({content: 'Você não pode usar esse comando', ephemeral: true});
-        return false;
-    }
-
     const { commandName } = interaction;
     if(commandName === 'startquiz') {        
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');
