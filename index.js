@@ -2,7 +2,6 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const Trivia = require('./trivia');
-const QuizManager = require('./quiz-manager');
 
 dotenv.config();
 
@@ -34,8 +33,8 @@ client.on('interactionCreate', interaction => {
             trivia.startTrivia();            
         }, 500);
     }
-    else if(commandName === 'managequiz_guild') {
-        QuizManager(interaction);
+    else if(commandName ==='status') {
+        interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + questions.length + '.\nUtilize ``/manage`` para gerenciar as perguntas cadastradas.', ephemeral: true} );
     }
 });
 

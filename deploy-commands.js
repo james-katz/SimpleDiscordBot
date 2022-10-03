@@ -18,6 +18,9 @@ const commands = [
     new SlashCommandBuilder()
         .setName('startquiz')
         .setDescription('Inicia um quiz com perguntas sobre a Zcash e o mundo cripto.'),
+	new SlashCommandBuilder()
+		.setName('status')
+		.setDescription('Mostra informações sobre o bot.')
 ].map(command => command.toJSON());
 
 rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands })
