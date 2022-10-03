@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const Trivia = require('./trivia');
+const QuizManager = require('./quiz-manager');
 
 dotenv.config();
 
@@ -25,17 +26,16 @@ client.once('ready', () => {
 client.on('interactionCreate', interaction => {
     const { commandName } = interaction;
     if(commandName === 'startquiz') {        
-        console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');
-        const msg = {
-            author: {id: interaction.user.id},
-            channel: client.channels.cache.get(interaction.channelId)
-        };
         interaction.deferReply();
-        let trivia = new Trivia(msg, questions);
+        console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');
+        
+        let trivia = new Trivia(interaction, questions);
         setTimeout(() => {
-            trivia.startTrivia();
-            interaction.deleteReply();
+            trivia.startTrivia();            
         }, 500);
+    }
+    else if(commandName === 'managequiz_guild') {
+        QuizManager(interaction);
     }
 });
 

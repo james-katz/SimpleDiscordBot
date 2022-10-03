@@ -1,9 +1,8 @@
-const { Client, EmbedBuilder } = require('discord.js');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageCollector, ComponentType } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 
 class Trivia {
-    constructor(msg, questions) {
-        this.msg = msg;
+    constructor(interaction, questions) {
+        this.interaction = interaction;
         this.questions = questions;
         this.participants = [];
     }
@@ -26,7 +25,7 @@ class Trivia {
         let embedQuiz = new EmbedBuilder()
             .setColor(0xf4b728)
             .setTitle('🤔 Um quiz foi iniciado!')
-            .setDescription('<@' + this.msg.author.id +'> iniciou um quiz pra galera! Leia atentamente e escolha sua resposta!')
+            .setDescription('<@' + this.interaction.user.id +'> iniciou um quiz pra galera! Leia atentamente e escolha sua resposta!')
             .addFields(
                 {name:'\u200B', value:'**A pergunta é: **' + quiz.question},
             )
@@ -65,12 +64,12 @@ class Trivia {
         }
         let row = new ActionRowBuilder().addComponents(buttons);
 
-        this.msg.channel.send( {embeds: [embedQuiz], components: [row]} )
+        this.interaction.editReply( {embeds: [embedQuiz], components: [row]} )
             .then(triviaMsg => {
-                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 10 * 1000 });
                 
                 collector.on('collect', i => {                    
-                    if(i.user.id === this.msg.author.id) {
+                    if(i.user.id === this.interaction.user.id) {
                         i.reply({embeds: [{
                             title: '⚠️ Você não pode participar de um quiz que você criou!',
                             color: 0xff0000
@@ -94,14 +93,14 @@ class Trivia {
                 });
                 
                 collector.on('end', collected => {
-                    setTimeout(() => triviaMsg.delete(), 10);
+                    // setTimeout(() => triviaMsg.delete(), 10);
                     var winners = [];
                     var loosers = [];
 
                     let triviaFinished = new EmbedBuilder()
                         .setColor(0xf4b728)
                         .setTitle('🤔 O quiz chegou ao fim!')
-                        .setDescription('Ninguém participou do quiz iniciado por <@'+this.msg.author.id+'> com a pergunta: '+quiz.question+' 🤷.')
+                        .setDescription('Ninguém participou do quiz iniciado por <@'+this.interaction.user.id+'> com a pergunta: '+quiz.question+' 🤷.')
                         .setTimestamp()
                         .setFooter({text: 'Finalizado! '+this.participants.length+ ' ' + (this.participants.length == 1 ? 'pessoa participou.' : 'pessoas participaram.')});
 
@@ -111,14 +110,14 @@ class Trivia {
                             else loosers.push('<@'+this.participants[j].user+'>');
                         }
                         if(winners.length > 0) {
-                            triviaFinished.data.description = winners.length + (winners.length == 1 ? ' pessoa acertou ' : ' pessoas acertaram ') + 'o quiz de <@' + this.msg.author.id +'> com a pergunnta: ' + quiz.question;
+                            triviaFinished.data.description = winners.length + (winners.length == 1 ? ' pessoa acertou ' : ' pessoas acertaram ') + 'o quiz de <@' + this.interaction.user.id +'> com a pergunnta: ' + quiz.question;
                             triviaFinished.addFields(
                                 { name: '**Correto**', value: winners.join('\n'), inline: true },
                                 { name: '**Incorreto**', value: (loosers.length > 0 ? loosers.join('\n') : 'Que maravilha! Ninguém errou!'), inline: true }
                             );
                         }
                         else {
-                            triviaFinished.data.description = 'Ninguém acertou o quiz iniciado por <@'+this.msg.author.id+'> com a pergunta: '+quiz.question+' 🤷.';
+                            triviaFinished.data.description = 'Ninguém acertou o quiz iniciado por <@'+this.interaction.user.id+'> com a pergunta: '+quiz.question+' 🤷.';
                         }
                     }
                     
@@ -131,13 +130,13 @@ class Trivia {
 
                     let row = new ActionRowBuilder().addComponents(buttons);
 
-                    this.msg.channel.send( {embeds: [triviaFinished], components: [row]} )
+                    this.interaction.editReply( {embeds: [triviaFinished], components: [row]} )
                         .then(() => {
                             setTimeout(() => {
                                 let tip = 'Ninguém acertou, ninguém recebe tips!';
                                 if(winners.length > 0) tip = 'O comando para enviar prêmio aos vencedores é: $tip ' + winners.join(', ') + ' <valor> <token>';
-                                this.msg.channel.send({content: tip});
-                            }, 500);
+                                this.interaction.followUp({content: tip, ephemeral: true});
+                            }, 1000);
                         });
                 });
             });
