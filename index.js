@@ -34,7 +34,7 @@ client.on('interactionCreate', interaction => {
         }, 500);
     }
     else if(commandName ==='status') {
-        interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + questions.length + '.\nUtilize ``/manage`` para gerenciar as perguntas cadastradas.', ephemeral: true} );
+        interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + questions.length + '.', ephemeral: true} );
     }
 });
 
