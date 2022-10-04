@@ -1,5 +1,9 @@
 [
     {
+        "question": "Qual dos nomes abaixo é considerado um dos criadores da Zcash?",
+        "answers":[ "Zooko Wilcox", "Satoshi Nakamoto", "Vitalik Buterin", "Do Kwon" ]
+    },
+    {
         "question": "Qual o fornecimento máximo da criptomoeda Zcash?",
         "answers":[ "21 milhões", "42 milhões", "1 bilhão", "Infinito" ]
     },
