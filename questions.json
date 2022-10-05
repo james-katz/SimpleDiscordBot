@@ -86,5 +86,25 @@
     {
         "question": "Qual foi o método de segurança usado durante a criação da Zcash?",
         "answers": [ "Airgap", "Antivírus", "2FA", "VPN" ]
+    },
+    {
+        "question": "Tres organizaçoes recebem a emissao de fundo de desenvolvimento Zcash que totaliza ____ das recompensas de mineração.",
+        "answers": [ "20%", "40%", "10%", "35%" ]
+    },
+    {
+        "question": "Qual o nome do equipamento utilizado para minerar Zcash hoje em dia?",
+        "answers": [ "ASICs", "Gforce 2a45", "Raspberry Pi 4", "Antrouter R3" ]
+    },
+    {
+        "question": "Durante o processo que chamamos de *Cerimônia*, um dos participantes não fazia parte dos 6 escolhidos, pois o mesmo usava um pseudônimo denonimado como _________,que até o ano o ano de 2022 ninguém sabia quem era.",
+        "answers": [ "John Dobertinn", "Zghost", "Michael Del Castilho", "Sifu0x" ]
+    },
+    {
+        "question": "Qual é o nome do novo enbaixador Zcash E.U.A trazido pela Zcash Community Grants (ZCG)?",
+        "answers": [ "Madison Parks", "John Zorm", "Tom Asta", "Gordon Mohr" ]
+    },
+    {
+        "question": "Uma ativaçao foi implementada no algoritimo da Zcash para conceder recompensas para o fundo de desenvolvimento de 2020 à 2024. Qual foi o nome dado a essa ativaçao?",
+        "answers": [ "Canopy", "Equihash", "Halo", "SHA-256" ]
     }
 ]
