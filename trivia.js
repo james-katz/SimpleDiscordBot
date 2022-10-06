@@ -66,7 +66,7 @@ class Trivia {
 
         this.interaction.editReply( {embeds: [embedQuiz], components: [row]} )
             .then(triviaMsg => {
-                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60 * 1000 });
+                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 10 * 1000 });
                 
                 collector.on('collect', i => {                    
                     if(i.user.id === this.interaction.user.id) {
@@ -93,7 +93,6 @@ class Trivia {
                 });
                 
                 collector.on('end', collected => {
-                    // setTimeout(() => triviaMsg.delete(), 10);
                     var winners = [];
                     var loosers = [];
 
@@ -136,8 +135,9 @@ class Trivia {
                                 let tip = 'Ninguém acertou, ninguém recebe tips!';
                                 if(winners.length > 0) tip = 'O comando para enviar prêmio aos vencedores é: $tip ' + winners.join(', ') + ' <valor> <token>';
                                 this.interaction.followUp({content: tip, ephemeral: true});
-                            }, 1000);
-                        });
+                            }, 800);
+                        })
+                        .catch((err) => console.log('Error: ' + err));
                 });
             });
     }
