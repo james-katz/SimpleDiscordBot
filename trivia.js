@@ -1,9 +1,9 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 
 class Trivia {
-    constructor(interaction, questions) {
+    constructor(interaction, question) {
         this.interaction = interaction;
-        this.questions = questions;
+        this.question = question;
         this.participants = [];
     }
 
@@ -18,8 +18,8 @@ class Trivia {
       }
 
     startTrivia() {
-        let idx = Math.floor(Math.random() * this.questions.length);
-        let quiz = this.questions[idx];
+        // let idx = Math.floor(Math.random() * this.questions.length);
+        let quiz = this.question;
         let shuffledAnswers = this.fyShuffle(quiz.answers);
 
         let embedQuiz = new EmbedBuilder()
