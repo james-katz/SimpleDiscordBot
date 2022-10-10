@@ -30,7 +30,7 @@ client.on('interactionCreate', interaction => {
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');
         
         let question = [];
-        axios.get('http://3.145.101.81:3000/getrand')
+        axios.get('http://127.0.0.1:3000/getrand')
         .then(res => {
             Object.assign(question, res.data);            
         });
