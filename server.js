@@ -10,14 +10,14 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get('/get', (req, res) => {    
+app.get('/get', (req, res) => {
     fs.readFile('./questions.json', 'utf8', (err, data) => {
         if(err) throw err;
         res.json(JSON.parse(data));
     });
 });
 
-app.get('/getrand', (req, res) => {    
+app.get('/getrand', (req, res) => {
     fs.readFile('./questions.json', 'utf8', (err, data) => {
         if(err) throw err;
         let q = JSON.parse(data);
@@ -26,7 +26,16 @@ app.get('/getrand', (req, res) => {
     });
 });
 
-app.post('/update', (req, res) => {    
+app.get('/howmany', (req, res) => {
+    fs.readFile('./questions.json', 'utf8', (err, data) => {
+        if(err) throw err;
+        let q = JSON.parse(data);
+        
+        res.json({'questions':Object.keys(q).length});
+    });
+});
+
+app.post('/update', (req, res) => {
     res.sendStatus(200);
     fs.writeFile('questions.json', JSON.stringify(req.body), (err) => {
         if(err) {

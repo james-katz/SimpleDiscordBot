@@ -30,18 +30,27 @@ client.on('interactionCreate', interaction => {
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');
         
         let question = [];
-        axios.get('http://127.0.0.1:3000/getrand')
+        axios.get('http://3.145.101.81:3000/getrand')
         .then(res => {
-            Object.assign(question, res.data);            
+            Object.assign(question, res.data);
+            let trivia = new Trivia(interaction, question);
+            setTimeout(() => {
+                trivia.startTrivia();            
+            }, 500);
         });
 
-        let trivia = new Trivia(interaction, question);
-        setTimeout(() => {
-            trivia.startTrivia();            
-        }, 500);
+        // let trivia = new Trivia(interaction, question);
+        // setTimeout(() => {
+        //     trivia.startTrivia();            
+        // }, 500);
     }
     else if(commandName ==='status') {
-        interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + questions.length + '.', ephemeral: true} );
+        axios.get('http://127.0.0.1:3000/howmany')
+        .then(res => {
+            let registered = res.data;
+            interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + registered.questions + '.', ephemeral: true} );
+        });
+        
     }
 });
 
