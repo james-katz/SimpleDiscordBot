@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const fs = require('fs');
 const dotenv = require('dotenv');
 const axios = require('axios');
 const Trivia = require('./trivia');
@@ -13,45 +12,36 @@ const client = new Client({
     ],
  });
 
-
 console.log("Booting...");
-
-// var questions = JSON.parse(fs.readFileSync('questions.json', 'utf-8'));
-// if(questions) console.log(questions.length + " questions loaded successfully!");
 
 client.once('ready', () => {
     console.log("Ready!");    
 });
 
 client.on('interactionCreate', interaction => {
-    const { commandName } = interaction;
-    if(commandName === 'startquiz') {        
-        interaction.deferReply();
-        console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');
-        
-        let question = [];
-        axios.get('http://3.145.101.81:3000/getrand')
-        .then(res => {
-            Object.assign(question, res.data);
-            let trivia = new Trivia(interaction, question);
-            setTimeout(() => {
-                trivia.startTrivia();            
-            }, 500);
-        });
-
-        // let trivia = new Trivia(interaction, question);
-        // setTimeout(() => {
-        //     trivia.startTrivia();            
-        // }, 500);
-    }
-    else if(commandName ==='status') {
-        axios.get('http://127.0.0.1:3000/howmany')
-        .then(res => {
-            let registered = res.data;
-            interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + registered.questions + '.', ephemeral: true} );
-        });
-        
-    }
+    interaction.deferReply()
+    .then(() => {
+        const { commandName } = interaction;
+        if(commandName === 'startquiz') {                
+            console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
+            let question = [];
+            axios.get('http://3.145.101.81:3000/getrand')
+            .then(res => {
+                Object.assign(question, res.data);
+                let trivia = new Trivia(interaction, question);
+                setTimeout(() => {
+                    trivia.startTrivia();            
+                }, 100);
+            });
+        }
+        else if(commandName ==='status') {
+            axios.get('http://127.0.0.1:3000/howmany')
+            .then(res => {
+                let registered = res.data;
+                interaction.editReply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + registered.questions + '.', ephemeral: true} );
+            });        
+        }
+    });
 });
 
 client.login(process.env.DISCORD_TOKEN);
