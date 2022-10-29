@@ -22,26 +22,37 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     
     const { commandName } = interaction;
-    if(commandName === 'startquiz') {                
+    if(commandName === 'startquiz' || commandName === 'startquiz-en') {                
         await interaction.deferReply();
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
+        
+        let lang = 'pt';
+        if(commandName === 'startquiz-en') lang = 'en';
         let question = [];
-        axios.get('http://3.145.101.81:3000/getrand')
+
+        axios.get('http://localhost:3000/getrand/' + lang)
         .then(res => {
             Object.assign(question, res.data);
-            let trivia = new Trivia(interaction, question);
+            let trivia = new Trivia(interaction, question, lang);
             setTimeout(() => {
                 trivia.startTrivia();            
             }, 100);
+        })
+        .catch(err => {
+            interaction.editReply({content:'Unable to connect to the database server ☹️\nPlease contact the administrator and inform the code: ' + err.code});
+            console.log(err);
         });
     }
-    else if(commandName ==='status') {
-        await interaction.deferReply();
+    else if(commandName ==='status') {        
         axios.get('http://3.145.101.81:3000/howmany')
         .then(res => {
             let registered = res.data;
-            interaction.editReply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + registered.questions + '.', ephemeral: true} );
-        });        
+            interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + registered.questions + '.', ephemeral: true} );
+        })
+        .catch(err => {
+            interaction.editReply({content:'Unable to connect to the database server ☹️\nPlease contact the administrator and inform the code: ' + err.code});
+            console.log(err);
+        });
     }
 
 });

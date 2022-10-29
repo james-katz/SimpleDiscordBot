@@ -19,6 +19,9 @@ const commands = [
         .setName('startquiz')
         .setDescription('Inicia um quiz com perguntas sobre a Zcash e o mundo cripto.'),
 	new SlashCommandBuilder()
+        .setName('startquiz-en')
+        .setDescription('Starts a trivia with questions about Zcash and the crypto world.'),
+	new SlashCommandBuilder()
 		.setName('status')
 		.setDescription('Mostra informações sobre o bot.')
 ].map(command => command.toJSON());

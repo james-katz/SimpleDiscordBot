@@ -17,8 +17,15 @@ app.get('/get', (req, res) => {
     });
 });
 
-app.get('/getrand', (req, res) => {
-    fs.readFile('./questions.json', 'utf8', (err, data) => {
+app.get('/getrand/:lang', (req, res) => {    
+    let q = '';
+    if(req.params.lang) {
+        if(req.params.lang == 'pt') q = '/questions.json';
+        else if(req.params.lang == 'en') q = '/questions-en.json';
+        else q = '/questions.json';
+        
+    }
+    fs.readFile((__dirname + q), 'utf8', (err, data) => {
         if(err) throw err;
         let q = JSON.parse(data);
         let randQ = q[Math.floor(Math.random() * (Object.keys(q).length - 1) )];

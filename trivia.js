@@ -1,9 +1,11 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const Localization = require('./localization');
 
 class Trivia {
-    constructor(interaction, question) {
+    constructor(interaction, question, lang) {
         this.interaction = interaction;
         this.question = question;
+        this.lang = lang;
         this.participants = [];
     }
 
@@ -22,15 +24,17 @@ class Trivia {
         let quiz = this.question;
         let shuffledAnswers = this.fyShuffle(quiz.answers);
 
+        const local = new Localization(this.lang);
+
         let embedQuiz = new EmbedBuilder()
             .setColor(0xf4b728)
-            .setTitle('🤔 Um quiz foi iniciado!')
-            .setDescription('<@' + this.interaction.user.id +'> iniciou um quiz pra galera! Leia atentamente e escolha sua resposta!')
+            .setTitle(local.text.triviaStartTitle)
+            .setDescription('<@' + this.interaction.user.id +'> ' + local.text.triviaStartDescription)
             .addFields(
-                {name:'\u200B', value:'**A pergunta é: **' + quiz.question},
+                {name:'\u200B', value:'**'+ local.text.triviaStartQuestionIs +'** ' + quiz.question},
             )
             .setTimestamp()
-            .setFooter({text: 'Finaliza em 1 minuto!'});
+            .setFooter({text: local.text.triviaStartEndsIn});
 
         var buttons = [];
         var correctAnswer = '';
@@ -71,7 +75,7 @@ class Trivia {
                 collector.on('collect', i => {                    
                     if(i.user.id === this.interaction.user.id) {
                         i.reply({embeds: [{
-                            title: '⚠️ Você não pode participar de um quiz que você criou!',
+                            title: local.text.triviaErrorOwnTrivia,
                             color: 0xff0000
                         }], ephemeral: true});
                         return false;
@@ -79,7 +83,7 @@ class Trivia {
                     for(let j = 0; j < this.participants.length; j ++) {                        
                         if(this.participants[j].user === i.user.id) {
                             i.reply({embeds: [{
-                                title: '⚠️ Você já está participando desse quiz!',
+                                title: local.text.triviaErrorJoined,
                                 color: 0xff0000
                             }], ephemeral: true});
                             return false;
@@ -98,10 +102,10 @@ class Trivia {
 
                     let triviaFinished = new EmbedBuilder()
                         .setColor(0xf4b728)
-                        .setTitle('🤔 O quiz chegou ao fim!')
-                        .setDescription('Ninguém participou do quiz iniciado por <@'+this.interaction.user.id+'> com a pergunta: '+quiz.question+' 🤷.')
+                        .setTitle(local.text.triviaEndedTitle)
+                        .setDescription(local.text.triviaEndedNoOne + ' <@'+this.interaction.user.id+'> '+ local.text.triviaEndedQuestion + ' ' + quiz.question + ' 🤷.')
                         .setTimestamp()
-                        .setFooter({text: 'Finalizado! '+this.participants.length+ ' ' + (this.participants.length == 1 ? 'pessoa participou.' : 'pessoas participaram.')});
+                        .setFooter({text: local.text.triviaEndedFooter + ' ' + this.participants.length + ' ' + (this.participants.length == 1 ? local.text.triviaEndedUser : local.text.triviaEndedUser)});
 
                     if(collected.size > 0) {                        
                         for(let j = 0; j < this.participants.length; j ++) {
@@ -109,14 +113,14 @@ class Trivia {
                             else loosers.push('<@'+this.participants[j].user+'>');
                         }
                         if(winners.length > 0) {
-                            triviaFinished.data.description = winners.length + (winners.length == 1 ? ' pessoa acertou ' : ' pessoas acertaram ') + 'o quiz de <@' + this.interaction.user.id +'> com a pergunnta: ' + quiz.question;
+                            triviaFinished.data.description = winners.length + (winners.length == 1 ? (' '+ local.text.triviaEndedUserGuess +' ') : (' ' + local.text.triviaEndedUsersGuess + ' ')) + local.text.triviaEndedTriviaBy +' <@' + this.interaction.user.id +'> ' + local.text.triviaEndedQuestion + ' ' + quiz.question;
                             triviaFinished.addFields(
-                                { name: '**Correto**', value: winners.join('\n'), inline: true },
-                                { name: '**Incorreto**', value: (loosers.length > 0 ? loosers.join('\n') : 'Que maravilha! Ninguém errou!'), inline: true }
+                                { name: '**' + local.text.triviaEndedCorrect + '**', value: winners.join('\n'), inline: true },
+                                { name: '**' + local.text.triviaEndedIncorrect + '**', value: (loosers.length > 0 ? loosers.join('\n') : local.text.triviaEndedNoLosers), inline: true }
                             );
                         }
                         else {
-                            triviaFinished.data.description = 'Ninguém acertou o quiz iniciado por <@'+this.interaction.user.id+'> com a pergunta: '+quiz.question+' 🤷.';
+                            triviaFinished.data.description = local.text.triviaEndedNoWinners + ' <@'+this.interaction.user.id+'> ' + local.text.triviaEndedQuestion + ' ' + quiz.question + ' 🤷.';
                         }
                     }
                     
@@ -132,9 +136,11 @@ class Trivia {
                     this.interaction.editReply( {embeds: [triviaFinished], components: [row]} )
                         .then(() => {
                             setTimeout(() => {
-                                let tip = 'Ninguém acertou, ninguém recebe tips!';
-                                if(winners.length > 0) tip = 'O comando para enviar prêmio aos vencedores é: $tip ' + winners.join(', ') + ' <valor> <token>';
-                                this.interaction.followUp({content: tip, ephemeral: true});
+                                // let tip = 'Ninguém acertou, ninguém recebe tips!';
+                                if(winners.length > 0) {
+                                    let tip = '$tip ' + winners.join(', ') + ' <amount> <token>';
+                                    this.interaction.followUp({content: tip, ephemeral: true});
+                                }
                             }, 800);
                         })
                         .catch((err) => console.log('Error: ' + err));
