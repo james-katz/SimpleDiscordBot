@@ -10,21 +10,26 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get('/get', (req, res) => {
-    fs.readFile('./questions.json', 'utf8', (err, data) => {
+app.get('/get/:lang', (req, res) => {
+    let q = '';
+
+    if(req.params.lang == 'pt') q = '/questions.json';
+    else if(req.params.lang == 'en') q = '/questions-en.json';
+    else q = '/questions.json';
+
+    fs.readFile(__dirname + q, 'utf8', (err, data) => {
         if(err) throw err;
         res.json(JSON.parse(data));
     });
 });
 
 app.get('/getrand/:lang', (req, res) => {    
-    let q = '';
-    if(req.params.lang) {
-        if(req.params.lang == 'pt') q = '/questions.json';
-        else if(req.params.lang == 'en') q = '/questions-en.json';
-        else q = '/questions.json';
-        
-    }
+    let q = '';    
+
+    if(req.params.lang == 'pt') q = '/questions.json';
+    else if(req.params.lang == 'en') q = '/questions-en.json';
+    else q = '/questions.json';    
+
     fs.readFile((__dirname + q), 'utf8', (err, data) => {
         if(err) throw err;
         let q = JSON.parse(data);
@@ -42,14 +47,19 @@ app.get('/howmany', (req, res) => {
     });
 });
 
-app.post('/update', (req, res) => {
-    res.sendStatus(200);
-    fs.writeFile('questions.json', JSON.stringify(req.body), (err) => {
+app.post('/update/:lang', (req, res) => {    
+    let q = '/failsafe.json';
+
+    if(req.params.lang == 'pt') q = '/questions.json';
+    else if(req.params.lang == 'en') q = '/questions-en.json';    
+
+    fs.writeFile(__dirname + q, JSON.stringify(req.body), (err) => {
         if(err) {
             console.log('Error while writing to file. ' + err);
             return
         }
         console.log('File was written succesfully');
+        res.sendStatus(200);
     });
 });
 
