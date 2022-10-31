@@ -33,7 +33,7 @@ app.get('/getrand/:lang', (req, res) => {
     fs.readFile((__dirname + q), 'utf8', (err, data) => {
         if(err) throw err;
         let q = JSON.parse(data);
-        let randQ = q[Math.floor(Math.random() * (Object.keys(q).length - 1) )];
+        let randQ = q[Math.floor(Math.random() * (Object.keys(q).length) )];
         res.json(randQ);
     });
 });
