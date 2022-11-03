@@ -13,7 +13,6 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
 	.then(() => console.log('Successfully deleted all guild application commands.'))
 	.catch(console.error);
 
-
 const commands = [
     new SlashCommandBuilder()
         .setName('startquiz')

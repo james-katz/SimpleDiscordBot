@@ -41,8 +41,7 @@ class Trivia {
         let emoji = "";        
         for(let i = 0; i < shuffledAnswers.length; i ++) {
             if(shuffledAnswers[i] == quiz.answers[0]) {
-                correctAnswer = "answer_" + i;
-                
+                correctAnswer = "answer_" + i;                
             }
             
             switch(i) {

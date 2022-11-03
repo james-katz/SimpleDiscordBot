@@ -1,4 +1,6 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, ModalSubmitInteraction } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+
 const dotenv = require('dotenv');
 const axios = require('axios');
 const Trivia = require('./trivia');
@@ -30,7 +32,7 @@ client.on('interactionCreate', async interaction => {
         if(commandName === 'startquiz-en') lang = 'en';
         let question = [];
 
-        axios.get('http://localhost:3000/getrand/' + lang)
+        axios.get('http://3.145.101.81:3000/getrand/' + lang)
         .then(res => {
             Object.assign(question, res.data);
             let trivia = new Trivia(interaction, question, lang);
@@ -43,7 +45,72 @@ client.on('interactionCreate', async interaction => {
             console.log(err);
         });
     }
-    else if(commandName ==='status') {        
+    else if(commandName === 'singlequiz') {        
+        const quizModal = new ModalBuilder()
+            .setCustomId('quizmodal')
+            .setTitle('ZecQuiz');
+
+        const questionInput = new TextInputBuilder()
+            .setCustomId('question')
+            .setLabel('Enunciado / Pergunta')
+            .setStyle(TextInputStyle.Paragraph);
+
+        const answerAInput = new TextInputBuilder()
+            .setCustomId('answer_0')
+            .setLabel('Resposta correta         ')
+            .setStyle(TextInputStyle.Short);
+
+        const answerBInput = new TextInputBuilder()
+            .setCustomId('answer_1')
+            .setLabel('Resposta incorreta')
+            .setStyle(TextInputStyle.Short);
+        
+        const answerCInput = new TextInputBuilder()
+            .setCustomId('answer_2')
+            .setLabel('Resposta incorreta')
+            .setRequired(false)
+            .setStyle(TextInputStyle.Short);
+
+        const answerDInput = new TextInputBuilder()
+            .setCustomId('answer_3')
+            .setLabel('Resposta incorreta')
+            .setRequired(false)
+            .setStyle(TextInputStyle.Short);
+
+        const questionInputRow = new ActionRowBuilder().addComponents(questionInput);
+        const answerAInputRow = new ActionRowBuilder().addComponents(answerAInput);
+        const answerBInputRow = new ActionRowBuilder().addComponents(answerBInput);
+        const answerCInputRow = new ActionRowBuilder().addComponents(answerCInput);
+        const answerDInputRow = new ActionRowBuilder().addComponents(answerDInput);
+
+        quizModal.addComponents(questionInputRow, answerAInputRow, answerBInputRow, answerCInputRow, answerDInputRow);
+
+        await interaction.showModal(quizModal);
+
+        const filter = (interaction) => interaction.customId === 'quizmodal';
+        interaction.awaitModalSubmit({filter, time: 10 * 60 * 1000})
+        .then(modalInteraction => {
+            modalInteraction.deferReply();
+            const question = {
+                question: modalInteraction.fields.getTextInputValue('question'),
+                answers: [
+                    modalInteraction.fields.getTextInputValue('answer_0'),
+                    modalInteraction.fields.getTextInputValue('answer_1'),
+                    modalInteraction.fields.getTextInputValue('answer_2'),
+                    modalInteraction.fields.getTextInputValue('answer_3'),
+                ]
+            }
+            if(question.answers[2] === '' || question.answers[3] === '') {
+                question.answers.splice(2,2);
+            }            
+
+            let trivia = new Trivia(modalInteraction, question, 'pt');
+            setTimeout(() => {
+                trivia.startTrivia();    
+            }, 1000);            
+        })
+    }
+    else if(commandName === 'status') {        
         axios.get('http://3.145.101.81:3000/howmany')
         .then(res => {
             let registered = res.data;
