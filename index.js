@@ -89,8 +89,8 @@ client.on('interactionCreate', async interaction => {
 
         const filter = (interaction) => interaction.customId === 'quizmodal';
         interaction.awaitModalSubmit({filter, time: 10 * 60 * 1000})
-        .then(modalInteraction => {
-            modalInteraction.deferReply();
+        .then(async modalInteraction => {
+            await modalInteraction.deferReply();
             const question = {
                 question: modalInteraction.fields.getTextInputValue('question'),
                 answers: [
