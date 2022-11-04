@@ -18,8 +18,13 @@ const commands = [
         .setName('startquiz')
         .setDescription('Inicia um quiz com perguntas sobre a Zcash e o mundo cripto.'),
 	new SlashCommandBuilder()
+		.setName('singlequiz')
+		.setDescription('Inicia um quiz que não está cadastrado no banco de dados.'),
+
+	new SlashCommandBuilder()
         .setName('startquiz-en')
         .setDescription('Starts a trivia with questions about Zcash and the crypto world.'),
+		
 	new SlashCommandBuilder()
 		.setName('status')
 		.setDescription('Mostra informações sobre o bot.')
