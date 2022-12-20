@@ -21,6 +21,7 @@ async function init_db() {
 
     const zcash = await guild.create({id: "978714252934258779", name: "Zcash Latam", language: 'pt'});
     const shapeshift = await guild.create({id: "554694662431178782", name: "Shepashift", language: 'en'});
+    const carabela = await guild.create({id: "934624477898227754", name: "Carabela", language: 'en'});
 
     let questions = [
         {
