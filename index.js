@@ -120,7 +120,7 @@ client.on('interactionCreate', async interaction => {
         })
     }
     else if(commandName === 'manage') {        
-        interaction.reply({content: 'To manage the quiz questions, access the link: https://localhost:8080/login/123\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
+        interaction.reply({content: 'To manage the quiz questions, access the link: http:///3.145.101.81/login/login/'+ interaction.guild.id +'\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
     }
 
 });
