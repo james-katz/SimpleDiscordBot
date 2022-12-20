@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 const axios = require('axios');
 const Trivia = require('./trivia');
 
+const SERVER_DB = 'http://localhost:3000' ;
+
 dotenv.config();
 
 const client = new Client({
@@ -24,17 +26,24 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     
     const { commandName } = interaction;
-    if(commandName === 'startquiz' || commandName === 'startquiz-en') {                
+    if(commandName === 'startquiz') {                
         await interaction.deferReply();
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
         
-        let lang = 'pt';
-        if(commandName === 'startquiz-en') lang = 'en';
-        let question = [];
+        const guildId = interaction.guild.id;
+        let lang = interaction.options.getString('language');
 
-        axios.get('http://3.145.101.81:3000/getrand/' + lang)
+        let validLang = lang == 'pt' || lang == 'en' || lang == 'es';
+        if(!validLang) {
+           await axios.get(SERVER_DB+'/guildlang/'+guildId)
+            .then((res) => {
+                lang = res.data;
+            });        
+        }
+        
+        axios.get(SERVER_DB+'/getrand/' + guildId +'/' + lang)
         .then(res => {
-            Object.assign(question, res.data);
+            let question= res.data[0];
             let trivia = new Trivia(interaction, question, lang);
             setTimeout(() => {
                 trivia.startTrivia();            
@@ -110,16 +119,8 @@ client.on('interactionCreate', async interaction => {
             }, 1000);            
         })
     }
-    else if(commandName === 'status') {        
-        axios.get('http://3.145.101.81:3000/howmany')
-        .then(res => {
-            let registered = res.data;
-            interaction.reply( {content:'Bot ativo em ' + interaction.guild.name + '!\nPerguntas cadastradas: ' + registered.questions + '.', ephemeral: true} );
-        })
-        .catch(err => {
-            interaction.editReply({content:'Unable to connect to the database server ☹️\nPlease contact the administrator and inform the code: ' + err.code});
-            console.log(err);
-        });
+    else if(commandName === 'manage') {        
+        interaction.reply({content: 'To manage the quiz questions, access the link: https://localhost:8080/login/123\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
     }
 
 });

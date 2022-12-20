@@ -19,8 +19,7 @@ class Trivia {
         return arr;
       }
 
-    startTrivia() {
-        // let idx = Math.floor(Math.random() * this.questions.length);
+    startTrivia() {        
         let quiz = this.question;
         let shuffledAnswers = this.fyShuffle(quiz.answers);
 
@@ -104,7 +103,7 @@ class Trivia {
                         .setTitle(local.text.triviaEndedTitle)
                         .setDescription(local.text.triviaEndedNoOne + ' <@'+this.interaction.user.id+'> '+ local.text.triviaEndedQuestion + ' ' + quiz.question + ' 🤷.')
                         .setTimestamp()
-                        .setFooter({text: local.text.triviaEndedFooter + ' ' + this.participants.length + ' ' + (this.participants.length == 1 ? local.text.triviaEndedUser : local.text.triviaEndedUser)});
+                        .setFooter({text: local.text.triviaEndedFooter + ' ' + this.participants.length + ' ' + (this.participants.length == 1 ? local.text.triviaEndedUser : local.text.triviaEndedUsers)});
 
                     if(collected.size > 0) {                        
                         for(let j = 0; j < this.participants.length; j ++) {

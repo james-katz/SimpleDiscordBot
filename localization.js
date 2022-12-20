@@ -11,7 +11,7 @@ class Localization {
             triviaEndedNoOne: 'Ninguém participou do quiz iniciado por',
             triviaEndedQuestion: 'com a pergunta:',
             triviaEndedFooter: 'Finalizado!',
-            triviaEndedUser: 'pessoa particiou.',
+            triviaEndedUser: 'pessoa participou.',
             triviaEndedUsers: 'pessoas participaram.',
             triviaEndedUserGuess: 'pessoa acertou',
             triviaEndedUsersGuess: 'pessoas acertaram',
@@ -46,8 +46,31 @@ class Localization {
             triviaErrorJoined: '⚠️ You\'ve already picked you guess!'
         };
 
+        this.es = {
+            triviaStartTitle: '🤔 Se ha iniciado un cuestionario.! ',
+            triviaStartDescription: 'comenzó una prueba para todos! ¡Lee atentamente y elige tu respuesta!',
+            triviaStartQuestionIs: 'La pregunta es:',
+            triviaStartEndsIn: 'Termina en 1 minuto!',
+            triviaEndedTitle: '🤔 ¡El cuestionario ha llegado a su fin!',
+            triviaEndedNoOne: 'Nadie participó en el cuestionario iniciado por',
+            triviaEndedQuestion: 'con la pregunta:',
+            triviaEndedFooter: '¡Acabado!',
+            triviaEndedUser: 'persona participó.',
+            triviaEndedUsers: 'personas participaron.',
+            triviaEndedUserGuess: 'persona acertó',
+            triviaEndedUsersGuess: 'personas acertaron ',
+            triviaEndedTriviaBy: 'la pergunta de',
+            triviaEndedCorrect: 'Correcto',
+            triviaEndedIncorrect: 'Incorrecto',
+            triviaEndedNoLosers: '¡Que maravilla! ¡Nadie se equivocó!',
+            triviaEndedNoWinners: 'Nadie acertó el cuestionario por',
+            triviaErrorOwnTrivia: '⚠️ ¡No puede participar en un quiz que usted creó!',
+            triviaErrorJoined: '⚠️ ¡Ya estás participando en este concurso!'
+        };
+
         this.text = this.pt;
         if(this.lang == 'en') this.text = this.en;
+        if(this.lang == 'es') this.text = this.es;
     }
 }
 

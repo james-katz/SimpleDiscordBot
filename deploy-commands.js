@@ -16,18 +16,28 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
 const commands = [
     new SlashCommandBuilder()
         .setName('startquiz')
-        .setDescription('Inicia um quiz com perguntas sobre a Zcash e o mundo cripto.'),
+        .setDescription('Starts a trivia with questions about crypto.')
+		.setDescriptionLocalizations({
+			'pt-BR': 'Inicia um quiz com perguntas sobre o mundo cripto.',
+			'es-ES': 'Inicia un cuestionario con preguntas sobre el mundo de las criptomonedas.'
+		})
+		.addStringOption(option =>
+			option
+			.setName('language')
+			.setDescription('Select the language of the quiz')
+			.addChoices(
+				{name: 'English (en)', value: 'en'},
+				{name: 'Português (pt)', value: 'pt'},
+				{name: 'Español (es)', value: 'es'},
+			)
+		),
 	new SlashCommandBuilder()
 		.setName('singlequiz')
 		.setDescription('Inicia um quiz que não está cadastrado no banco de dados.'),
-
+	
 	new SlashCommandBuilder()
-        .setName('startquiz-en')
-        .setDescription('Starts a trivia with questions about Zcash and the crypto world.'),
-		
-	new SlashCommandBuilder()
-		.setName('status')
-		.setDescription('Mostra informações sobre o bot.')
+		.setName('manage')
+		.setDescription('Manages the registered questions.')
 ].map(command => command.toJSON());
 
 rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands })

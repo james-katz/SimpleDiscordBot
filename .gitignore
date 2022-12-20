@@ -1,4 +1,7 @@
 node_modules
 deploy-commands-guild.js
 trivia.js.bak
+questions.json.old
+questions.json
+questions-en.json
 .env
