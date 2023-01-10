@@ -68,7 +68,7 @@ class Trivia {
 
         this.interaction.editReply( {embeds: [embedQuiz], components: [row]} )
             .then(triviaMsg => {
-                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60 * 1000 });
+                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45 * 1000 });
                 
                 collector.on('collect', i => {                    
                     if(i.user.id === this.interaction.user.id) {
