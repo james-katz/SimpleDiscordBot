@@ -31,6 +31,17 @@ client.on('interactionCreate', async interaction => {
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
         
         const guildId = interaction.guild.id;
+        console.log(guildId);
+        // Hotfix for now, deal with it later xD
+        if(guildId != '978714252934258779' && guildId != '1022920863303090206') {
+            interaction.editReply({embeds: [{
+                color: 0xff0000,
+                title: '🚫 Bot disabled on this server!',
+                description: 'This bot is opensource, but the virtual cloud computing it runs on is paid by another server.\nIf you want this bot in your discord server, please host it by your own means or contact the administrator for a special offer.'
+            }]});
+            return;
+        }
+
         let lang = interaction.options.getString('language');
 
         let validLang = lang == 'pt' || lang == 'en' || lang == 'es';
@@ -120,7 +131,8 @@ client.on('interactionCreate', async interaction => {
         })
     }
     else if(commandName === 'manage') {        
-        interaction.reply({content: 'To manage the quiz questions, access the link: http:///3.145.101.81/login/login/'+ interaction.guild.id +'\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
+        //interaction.reply({content: 'To manage the quiz questions, access the link: http:///3.145.101.81/login/'+ interaction.guild.id +'\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
+        interaction.reply({content: 'Disabled', ephemeral: true});
     }
 
 });
