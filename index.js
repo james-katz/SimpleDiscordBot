@@ -33,11 +33,11 @@ client.on('interactionCreate', async interaction => {
         const guildId = interaction.guild.id;
         console.log(guildId);
         // Hotfix for now, deal with it later xD
-        if(guildId != '978714252934258779' && guildId != '1022920863303090206') {
+        if(guildId != '978714252934258779' && guildId != '1022920863303090206' && guildId != '554694662431178782') {
             interaction.editReply({embeds: [{
                 color: 0xff0000,
                 title: '🚫 Bot disabled on this server!',
-                description: 'This bot is opensource, but the virtual cloud computing it runs on is paid by another server.\nIf you want this bot in your discord server, please host it by your own means or contact the administrator for a special offer.'
+                description: 'This bot is opensource, but the virtual cloud computing it runs on is paid.\nIf you want this bot in your discord server, please host it by your own means or contact the administrator for a special offer.'
             }]});
             return;
         }
