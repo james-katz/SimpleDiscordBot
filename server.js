@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+const session = [];
+
 const sequelize = require('./sequelize');
 sequelize.authenticate()
 .then(()=>{
@@ -31,15 +33,36 @@ app.get('/get/:guild/:lang', async (req, res) => {
 app.get('/getrand/:guild/:lang', async (req, res) => {    
     let guildId = req.params.guild;
     if(guildId == '1022920863303090206') guildId = '978714252934258779';
+    
+    let repeated = false;
+    let q;
 
-    const q = await sequelize.models.question.findAll({
-        where: {
+    const totalQ = await sequelize.models.question.count({
+        where:{
             guildId: guildId,
             language: req.params.lang
-        },
-        order: sequelize.random(),
-        limit: 1
+        }
     });
+    do {
+        q = await sequelize.models.question.findAll({
+            where: {
+                guildId: guildId,
+                language: req.params.lang
+            },
+            order: sequelize.random(),
+            limit: 1
+        });
+        const qId = q[0].dataValues.id;
+        const sess = session[guildId];        
+        if(sess && sess.includes(qId)) {
+            repeated = true;
+            console.log('reetida')
+        }
+        else {
+            addQuestionTimeOut(guildId, totalQ, qId);
+            repeated = false;
+        }
+    } while(repeated);
     res.json(q);
 });
 
@@ -100,3 +123,16 @@ app.get('/guildname/:guildId', async (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
     console.log('Listening ...');
 });
+
+function addQuestionTimeOut(id, max,q) {
+    max = max - 1;
+    let timeOut = [];
+    if(session[id]) timeOut = session[id];
+    timeOut.push(q);
+    if(timeOut.length > max) {
+        timeOut.splice(0, timeOut.length - max); // remove oldest elements from beginning of array
+
+    }
+    session[id] = timeOut;
+    console.log(session[id]);
+}
