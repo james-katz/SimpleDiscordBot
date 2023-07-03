@@ -72,28 +72,32 @@ client.on('interactionCreate', async interaction => {
 
         const questionInput = new TextInputBuilder()
             .setCustomId('question')
-            .setLabel('Enunciado / Pergunta')
+            .setLabel('Enunciado / Pergunta')            
             .setStyle(TextInputStyle.Paragraph);
 
         const answerAInput = new TextInputBuilder()
             .setCustomId('answer_0')
-            .setLabel('Resposta correta         ')
+            .setLabel('Resposta correta')
+            .setMaxLength(80)
             .setStyle(TextInputStyle.Short);
 
         const answerBInput = new TextInputBuilder()
             .setCustomId('answer_1')
             .setLabel('Resposta incorreta')
+            .setMaxLength(80)
             .setStyle(TextInputStyle.Short);
         
         const answerCInput = new TextInputBuilder()
             .setCustomId('answer_2')
             .setLabel('Resposta incorreta')
+            .setMaxLength(80)
             .setRequired(false)
             .setStyle(TextInputStyle.Short);
 
         const answerDInput = new TextInputBuilder()
             .setCustomId('answer_3')
             .setLabel('Resposta incorreta')
+            .setMaxLength(80)
             .setRequired(false)
             .setStyle(TextInputStyle.Short);
 

@@ -60,7 +60,7 @@ class Trivia {
             }
             buttons[i] = new ButtonBuilder()
                 .setCustomId('answer_'+i)
-                .setLabel(shuffledAnswers[i])
+                .setLabel(shuffledAnswers[i].substring(0,80))
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji(emoji);
         }
