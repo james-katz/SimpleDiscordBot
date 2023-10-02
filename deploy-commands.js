@@ -30,10 +30,17 @@ const commands = [
 				{name: 'Português (pt)', value: 'pt'},
 				{name: 'Español (es)', value: 'es'},
 			)
-		),
+		)
+		.addStringOption(option =>
+			option.setName('prize')
+				.setDescription('USD amount to be splitted between winners.')),
+
 	new SlashCommandBuilder()
 		.setName('singlequiz')
-		.setDescription('Inicia um quiz que não está cadastrado no banco de dados.'),
+		.setDescription('Inicia um quiz que não está cadastrado no banco de dados.')
+		.addStringOption(option =>
+			option.setName('prize')
+				.setDescription('USD amount to be splitted between winners.')),
 	
 	new SlashCommandBuilder()
 		.setName('manage')

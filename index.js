@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const axios = require('axios');
 const Trivia = require('./trivia');
 
-const SERVER_DB = 'http://localhost:3000' ;
+const SERVER_DB = 'http://13.58.71.62:3000' ;
 
 dotenv.config();
 
@@ -26,12 +26,16 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     
     const { commandName } = interaction;
-    if(commandName === 'startquiz') {                
+    if(commandName === 'startquiz') {    
+        let prize = "";
+        prize = interaction.options.getString('prize');
+        if(prize) prize = prize.replace(/,/g, '.');
+
         await interaction.deferReply();
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
         
         const guildId = interaction.guild.id;
-        console.log(guildId);
+        // console.log(guildId);
         // Hotfix for now, deal with it later xD
         if(guildId != '978714252934258779' && guildId != '1022920863303090206' && guildId != '554694662431178782') {
             interaction.editReply({embeds: [{
@@ -55,7 +59,7 @@ client.on('interactionCreate', async interaction => {
         axios.get(SERVER_DB+'/getrand/' + guildId +'/' + lang)
         .then(res => {
             let question= res.data[0];
-            let trivia = new Trivia(interaction, question, lang);
+            let trivia = new Trivia(interaction, question, lang, prize);
             setTimeout(() => {
                 trivia.startTrivia();            
             }, 100);
@@ -66,8 +70,12 @@ client.on('interactionCreate', async interaction => {
         });
     }
     else if(commandName === 'singlequiz') {        
+        let prize = "";
+        prize = interaction.options.getString('prize');
+        if(prize) prize = prize.replace(/,/g, '.');
+
         const quizModal = new ModalBuilder()
-            .setCustomId('quizmodal')
+            .setCustomId(`quizmodal_${interaction.id}`)
             .setTitle('ZecQuiz');
 
         const questionInput = new TextInputBuilder()
@@ -109,9 +117,9 @@ client.on('interactionCreate', async interaction => {
 
         quizModal.addComponents(questionInputRow, answerAInputRow, answerBInputRow, answerCInputRow, answerDInputRow);
 
-        await interaction.showModal(quizModal);
+        await interaction.showModal(quizModal).catch(err => console.log(err));
 
-        const filter = (interaction) => interaction.customId === 'quizmodal';
+        const filter = (i) => i.customId === `quizmodal_${interaction.id}`;
         interaction.awaitModalSubmit({filter, time: 10 * 60 * 1000})
         .then(async modalInteraction => {
             await modalInteraction.deferReply();
@@ -128,11 +136,11 @@ client.on('interactionCreate', async interaction => {
                 question.answers.splice(2,2);
             }            
 
-            let trivia = new Trivia(modalInteraction, question, 'pt');
+            let trivia = new Trivia(modalInteraction, question, 'pt', prize);
             setTimeout(() => {
                 trivia.startTrivia();    
             }, 1000);            
-        })
+        }).catch((err) => console.log(err));
     }
     else if(commandName === 'manage') {        
         //interaction.reply({content: 'To manage the quiz questions, access the link: http:///3.145.101.81/login/'+ interaction.guild.id +'\nWARNING: Do NOT share this links with anyone!', ephemeral: true});

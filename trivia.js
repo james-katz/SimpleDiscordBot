@@ -2,11 +2,12 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentTyp
 const Localization = require('./localization');
 
 class Trivia {
-    constructor(interaction, question, lang) {
+    constructor(interaction, question, lang, prize) {
         this.interaction = interaction;
         this.question = question;
         this.lang = lang;
         this.participants = [];
+        this.prize = prize || "";
     }
 
     fyShuffle(oldArr) {
@@ -71,13 +72,13 @@ class Trivia {
                 const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45 * 1000 });
                 
                 collector.on('collect', i => {                    
-                    if(i.user.id === this.interaction.user.id) {
-                        i.reply({embeds: [{
-                            title: local.text.triviaErrorOwnTrivia,
-                            color: 0xff0000
-                        }], ephemeral: true});
-                        return false;
-                    };
+                    // if(i.user.id === this.interaction.user.id) {
+                    //     i.reply({embeds: [{
+                    //         title: local.text.triviaErrorOwnTrivia,
+                    //         color: 0xff0000
+                    //     }], ephemeral: true});
+                    //     return false;
+                    // };
                     for(let j = 0; j < this.participants.length; j ++) {                        
                         if(this.participants[j].user === i.user.id) {
                             i.reply({embeds: [{
@@ -135,9 +136,9 @@ class Trivia {
                         .then(() => {
                             setTimeout(() => {
                                 // let tip = 'Ninguém acertou, ninguém recebe tips!';
-                                if(winners.length > 0) {
-                                    let tip = '$tip ' + winners.join(', ') + ' <amount> <token>';
-                                    this.interaction.followUp({content: tip, ephemeral: true});
+                                if(winners.length > 0 && this.prize) {
+                                    let tip = '$ztip ' + winners.join(' ') + '$'+this.prize +' ZecQuiz';
+                                    this.interaction.followUp({content: tip});
                                 }
                             }, 800);
                         })
