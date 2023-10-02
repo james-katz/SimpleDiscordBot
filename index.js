@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const axios = require('axios');
 const Trivia = require('./trivia');
 
-const SERVER_DB = 'http://13.58.71.62:3000' ;
+const SERVER_DB = 'http://localhost:3000' ;
 
 dotenv.config();
 

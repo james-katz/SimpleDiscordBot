@@ -72,13 +72,13 @@ class Trivia {
                 const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45 * 1000 });
                 
                 collector.on('collect', i => {                    
-                    // if(i.user.id === this.interaction.user.id) {
-                    //     i.reply({embeds: [{
-                    //         title: local.text.triviaErrorOwnTrivia,
-                    //         color: 0xff0000
-                    //     }], ephemeral: true});
-                    //     return false;
-                    // };
+                    if(i.user.id === this.interaction.user.id) {
+                        i.reply({embeds: [{
+                            title: local.text.triviaErrorOwnTrivia,
+                            color: 0xff0000
+                        }], ephemeral: true});
+                        return false;
+                    };
                     for(let j = 0; j < this.participants.length; j ++) {                        
                         if(this.participants[j].user === i.user.id) {
                             i.reply({embeds: [{
