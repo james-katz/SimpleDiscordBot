@@ -23,6 +23,27 @@ class Trivia {
     startTrivia() {        
         let quiz = this.question;
         let shuffledAnswers = this.fyShuffle(quiz.answers);
+        let answerList = "";
+        let letterCount = 0;
+        for(let answer of shuffledAnswers) {    
+            let letter;
+            switch(letterCount) {
+                case 0:
+                    letter = "🇦";
+                    break;
+                case 1:
+                    letter = "🇧";
+                    break;
+                case 2:
+                    letter = "🇨";
+                    break;
+                case 3:
+                    letter = "🇩";
+                    break;
+            }        
+            answerList += `${letter}) ${answer}\n`;
+            letterCount ++;
+        }
 
         const local = new Localization(this.lang);
 
@@ -32,6 +53,9 @@ class Trivia {
             .setDescription('<@' + this.interaction.user.id +'> ' + local.text.triviaStartDescription)
             .addFields(
                 {name:'\u200B', value:'**'+ local.text.triviaStartQuestionIs +'** ' + quiz.question},
+            )
+            .addFields(
+                {name:'\u200B', value:'**'+ local.text.triviaStartAnswers +'**\n' + answerList},
             )
             .setTimestamp()
             .setFooter({text: local.text.triviaStartEndsIn});
@@ -61,7 +85,7 @@ class Trivia {
             }
             buttons[i] = new ButtonBuilder()
                 .setCustomId('answer_'+i)
-                .setLabel(shuffledAnswers[i].substring(0,80))
+                // .setLabel(shuffledAnswers[i].substring(0,80))
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji(emoji);
         }
@@ -103,6 +127,9 @@ class Trivia {
                         .setColor(0xf4b728)
                         .setTitle(local.text.triviaEndedTitle)
                         .setDescription(local.text.triviaEndedNoOne + ' <@'+this.interaction.user.id+'> '+ local.text.triviaEndedQuestion + ' ' + quiz.question + ' 🤷.')
+                        .addFields(
+                            {name:'\u200B', value:'**'+ local.text.triviaStartAnswers +'**\n' + answerList},
+                        )
                         .setTimestamp()
                         .setFooter({text: local.text.triviaEndedFooter + ' ' + this.participants.length + ' ' + (this.participants.length == 1 ? local.text.triviaEndedUser : local.text.triviaEndedUsers)});
 
@@ -113,6 +140,7 @@ class Trivia {
                         }
                         if(winners.length > 0) {
                             triviaFinished.data.description = winners.length + (winners.length == 1 ? (' '+ local.text.triviaEndedUserGuess +' ') : (' ' + local.text.triviaEndedUsersGuess + ' ')) + local.text.triviaEndedTriviaBy +' <@' + this.interaction.user.id +'> ' + local.text.triviaEndedQuestion + ' ' + quiz.question;
+                           
                             triviaFinished.addFields(
                                 { name: '**' + local.text.triviaEndedCorrect + '**', value: winners.join('\n'), inline: true },
                                 { name: '**' + local.text.triviaEndedIncorrect + '**', value: (loosers.length > 0 ? loosers.join('\n') : local.text.triviaEndedNoLosers), inline: true }
