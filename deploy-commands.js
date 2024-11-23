@@ -15,22 +15,22 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
 
 const commands = [
     new SlashCommandBuilder()
-        .setName('startquiz')
+        .setName('jasperquiz')
         .setDescription('Starts a trivia with questions about crypto.')
-		.setDescriptionLocalizations({
-			'pt-BR': 'Inicia um quiz com perguntas sobre o mundo cripto.',
-			'es-ES': 'Inicia un cuestionario con preguntas sobre el mundo de las criptomonedas.'
-		})
-		.addStringOption(option =>
-			option
-			.setName('language')
-			.setDescription('Select the language of the quiz')
-			.addChoices(
-				{name: 'English (en)', value: 'en'},
-				{name: 'Português (pt)', value: 'pt'},
-				{name: 'Español (es)', value: 'es'},
-			)
-		)
+		// .setDescriptionLocalizations({
+		// 	'pt-BR': 'Inicia um quiz com perguntas sobre o mundo cripto.',
+		// 	'es-ES': 'Inicia un cuestionario con preguntas sobre el mundo de las criptomonedas.'
+		// })
+		// .addStringOption(option =>
+		// 	option
+		// 	.setName('language')
+		// 	.setDescription('Select the language of the quiz')
+		// 	.addChoices(
+		// 		{name: 'English (en)', value: 'en'},
+		// 		{name: 'Português (pt)', value: 'pt'},
+		// 		{name: 'Español (es)', value: 'es'},
+		// 	)
+		// )
 		.addStringOption(option =>
 			option.setName('prize')
 				.setDescription('USD amount to be splitted between winners.')),

@@ -1,5 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const Localization = require('./localization');
+const { EventEmitter } = require('events');
 
 class Trivia {
     constructor(interaction, question, lang, prize) {
@@ -8,6 +9,8 @@ class Trivia {
         this.lang = lang;
         this.participants = [];
         this.prize = prize || "";
+        this.emitter = new EventEmitter();
+
     }
 
     fyShuffle(oldArr) {
@@ -20,7 +23,7 @@ class Trivia {
         return arr;
       }
 
-    startTrivia() {        
+    startTrivia(idx) {        
         let quiz = this.question;
         let shuffledAnswers = this.fyShuffle(quiz.answers);
         let answerList = "";
@@ -65,7 +68,7 @@ class Trivia {
         let emoji = "";        
         for(let i = 0; i < shuffledAnswers.length; i ++) {
             if(shuffledAnswers[i] == quiz.answers[0]) {
-                correctAnswer = "answer_" + i;                
+                correctAnswer = "answer_" + i + '_' + idx;                
             }
             
             switch(i) {
@@ -84,17 +87,17 @@ class Trivia {
                 
             }
             buttons[i] = new ButtonBuilder()
-                .setCustomId('answer_'+i)
+                .setCustomId('answer_'+i+'_'+idx)
                 // .setLabel(shuffledAnswers[i].substring(0,80))
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji(emoji);
         }
         let row = new ActionRowBuilder().addComponents(buttons);
 
-        this.interaction.editReply( {embeds: [embedQuiz], components: [row]} )
-            .then(triviaMsg => {
+        this.interaction.followUp( {embeds: [embedQuiz], components: [row]} )
+            .then(async (triviaMsg) => {
                 const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45 * 1000 });
-                
+
                 collector.on('collect', i => {                    
                     if(i.user.id === this.interaction.user.id) {
                         i.reply({embeds: [{
@@ -122,7 +125,6 @@ class Trivia {
                 collector.on('end', collected => {
                     var winners = [];
                     var loosers = [];
-
                     let triviaFinished = new EmbedBuilder()
                         .setColor(0xf4b728)
                         .setTitle(local.text.triviaEndedTitle)
@@ -150,7 +152,7 @@ class Trivia {
                             triviaFinished.data.description = local.text.triviaEndedNoWinners + ' <@'+this.interaction.user.id+'> ' + local.text.triviaEndedQuestion + ' ' + quiz.question + ' 🤷.';
                         }
                     }
-                    
+
                     for(let j = 0; j < buttons.length; j ++) {
                         buttons[j].data.disabled = true;
                         if(buttons[j].data.custom_id == correctAnswer) {
@@ -160,7 +162,7 @@ class Trivia {
 
                     let row = new ActionRowBuilder().addComponents(buttons);
 
-                    this.interaction.editReply( {embeds: [triviaFinished], components: [row]} )
+                    triviaMsg.edit( {embeds: [triviaFinished], components: [row]} )
                         .then(() => {
                             setTimeout(() => {
                                 // let tip = 'Ninguém acertou, ninguém recebe tips!';
@@ -168,6 +170,8 @@ class Trivia {
                                     let tip = '$ztip ' + winners.join(' ') + '$'+this.prize +' ZecQuiz';
                                     this.interaction.followUp({content: tip});
                                 }
+                                this.participants = [];
+                                this.emitter.emit('end');
                             }, 800);
                         })
                         .catch((err) => console.log('Error: ' + err));

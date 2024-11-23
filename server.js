@@ -4,10 +4,13 @@ const cors = require('cors');
 
 const session = [];
 
-const sequelize = require('./sequelize');
+const sequelize = require('./sequelize/index');
 sequelize.authenticate()
-.then(()=>{
+.then(async ()=>{
+    // await sequelize.sync({ force: false });
+
     console.log('Database up and running!');
+
 })
 .catch(err=> {
     console.log('Fatal: No connection to the database!');
@@ -66,6 +69,31 @@ app.get('/getrand/:guild/:lang', async (req, res) => {
     res.json(q);
 });
 
+app.get('/getseq/:guild/', async (req, res) => {    
+    let guildId = req.params.guild;
+    if(guildId == '1022920863303090206') guildId = '978714252934258779';
+    
+    let q = {};
+    try {
+        q = await sequelize.models.question.findAll({
+            where: {
+                guildId: guildId,
+                language: 'pt'
+            },
+            order: [['id', 'ASC']], // Sort by `id` in ascending order
+            // limit: 1
+        });
+        console.log('jasgfasfhsa',q);
+        if (q.length == 0) q = {error: true};
+    }
+    catch {
+        console.log("no more questions");
+        q = {error: true}
+    }   
+       
+    res.json(q);
+});
+
 app.delete('/delete/:id', async (req, res) => {
     sequelize.models.question.destroy({
         where: {
@@ -116,8 +144,15 @@ app.put('/update/:quesId', async (req, res) => {
 
 app.get('/guildname/:guildId', async (req, res) => {
     console.log(req.params.guildId);
-    const guild = await sequelize.models.guild.findOne({ where: {id: req.params.guildId} });    
-    res.json(guild);
+
+    // try {
+        
+        const guild = await sequelize.models.guild.findOne({ where: {id: req.params.guildId} });    
+        res.json(guild);
+    // }
+    // catch {
+    //     res.json({});
+    // }
 });
 
 app.listen(process.env.PORT || 3000, () => {

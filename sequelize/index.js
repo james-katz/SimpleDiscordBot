@@ -5,7 +5,8 @@ const sequelize = new Sequelize({
     dialect: 'sqlite',
 	storage: 'dbs/zecquiz.sqlite',
 	logQueryParameters: true,
-	benchmark: true    
+	benchmark: true,
+    sync: false 
 });
 
 // Load all models

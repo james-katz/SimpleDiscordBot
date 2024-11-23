@@ -26,25 +26,53 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     
     const { commandName } = interaction;
-    if(commandName === 'startquiz') {    
+    if(commandName === 'jasperquiz') {    
+        await interaction.deferReply();
+
+        if(interaction.user.id !== '290336959627395072') {
+            interaction.editReply({embeds: [{
+                color: 0xff0000,
+                title: '🚫 Sem permissão!',
+                description: `Apenas o grande <@1122272347827732686> podo usar esse comando.`
+            }]});
+            return;
+        }
+        
         let prize = "";
         prize = interaction.options.getString('prize');
         if(prize) prize = prize.replace(/,/g, '.');
 
-        await interaction.deferReply();
+        if(prize >= 5) {
+            interaction.editReply({embeds: [{
+                color: 0xff0000,
+                title: '🚫 Tip amount too high!',
+                description: 'Right now I can only send ammounts less than $5 USD.'
+            }]});
+            return;
+        }
+
+        else if(!prize) {
+            interaction.editReply({embeds: [{
+                color: 0xff0000,
+                title: '🚫 This command requires a prize amnount!',
+                description: 'Please inform a tip amount less than $5 USD.'
+            }]});
+            return;
+        }
+
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
         
         const guildId = interaction.guild.id;
         // console.log(guildId);
         // Hotfix for now, deal with it later xD
-        if(guildId != '978714252934258779' && guildId != '1022920863303090206' && guildId != '554694662431178782') {
-            interaction.editReply({embeds: [{
-                color: 0xff0000,
-                title: '🚫 Bot disabled on this server!',
-                description: 'This bot is opensource, but the virtual cloud computing it runs on is paid.\nIf you want this bot in your discord server, please host it by your own means or contact the administrator for a special offer.'
-            }]});
-            return;
-        }
+        // if(guildId != '978714252934258779' && guildId != '1022920863303090206' && guildId != '554694662431178782') {
+        //     interaction.editReply({embeds: [{
+        //         color: 0xff0000,
+        //         title: '🚫 Bot disabled on this server!',
+        //         description: 'This bot is opensource, but the virtual cloud computing it runs on is paid.\nIf you want this bot in your discord server, please host it by your own means or contact the administrator for a special offer.'
+        //     }]});
+        //     return;
+        // }
 
         let lang = interaction.options.getString('language');
 
@@ -55,14 +83,40 @@ client.on('interactionCreate', async interaction => {
                 lang = res.data;
             });        
         }
+        lang = 'pt';
+        let questionIdx = 0;
         
-        axios.get(SERVER_DB+'/getrand/' + guildId +'/' + lang)
+        axios.get(SERVER_DB+'/getseq/978714252934258779')
         .then(res => {
-            let question= res.data[0];
+            if(res.data.error) {
+                console.log('no question received')
+                interaction.editReply({content:'Acabaram-se as perguntas'});
+
+                return;
+            }
+            console.log(`Starting question ${questionIdx}\n\n`);
+            let question = res.data[questionIdx];            
             let trivia = new Trivia(interaction, question, lang, prize);
-            setTimeout(() => {
-                trivia.startTrivia();            
-            }, 100);
+            trivia.startTrivia(questionIdx);
+            // await axios.delete(SERVER_DB+'/delete/' + question.id);
+            questionIdx ++;
+            
+            let timer = setInterval(async () => {
+                console.log(`Starting question ${questionIdx}\n\n`);
+                
+                setTimeout(async() => {
+                    let question = res.data[questionIdx];  
+                    
+                    let trivia = new Trivia(interaction, question, lang, prize);    
+                    trivia.startTrivia(questionIdx);
+                    // await axios.delete(SERVER_DB+'/delete/' + question.id);
+                    questionIdx ++;
+                    if(questionIdx >= res.data.length) {
+                        console.log("clearing timer")
+                        clearInterval(timer);
+                    }
+                }, 100);                
+            }, 60*1000);           
         })
         .catch(err => {
             interaction.editReply({content:'Unable to connect to the database server ☹️\nPlease contact the administrator and inform the code: ' + err.code});
@@ -146,7 +200,6 @@ client.on('interactionCreate', async interaction => {
         //interaction.reply({content: 'To manage the quiz questions, access the link: http:///3.145.101.81/login/'+ interaction.guild.id +'\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
         interaction.reply({content: 'Disabled', ephemeral: true});
     }
-
 });
 
 client.login(process.env.DISCORD_TOKEN);
