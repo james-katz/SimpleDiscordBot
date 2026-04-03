@@ -17,20 +17,6 @@ const commands = [
     new SlashCommandBuilder()
         .setName('jasperquiz')
         .setDescription('Starts a trivia with questions about crypto.')
-		// .setDescriptionLocalizations({
-		// 	'pt-BR': 'Inicia um quiz com perguntas sobre o mundo cripto.',
-		// 	'es-ES': 'Inicia un cuestionario con preguntas sobre el mundo de las criptomonedas.'
-		// })
-		// .addStringOption(option =>
-		// 	option
-		// 	.setName('language')
-		// 	.setDescription('Select the language of the quiz')
-		// 	.addChoices(
-		// 		{name: 'English (en)', value: 'en'},
-		// 		{name: 'Português (pt)', value: 'pt'},
-		// 		{name: 'Español (es)', value: 'es'},
-		// 	)
-		// )
 		.addStringOption(option =>
 			option.setName('prize')
 				.setDescription('USD amount to be splitted between winners.')),
@@ -43,8 +29,8 @@ const commands = [
 				.setDescription('USD amount to be splitted between winners.')),
 	
 	new SlashCommandBuilder()
-		.setName('manage')
-		.setDescription('Manages the registered questions.')
+		.setName('rank')
+		.setDescription('Displays the trivia ranking.')
 ].map(command => command.toJSON());
 
 rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands })

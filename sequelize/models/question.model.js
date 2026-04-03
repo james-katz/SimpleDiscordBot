@@ -2,6 +2,12 @@ const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     sequelize.define('question', {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            unique: true,
+            primaryKey: true
+        },
         question: {
             allowNull: false,
             type: DataTypes.TEXT                        
@@ -11,8 +17,10 @@ module.exports = (sequelize) => {
             type: DataTypes.JSON
         },
         language: {
-            aloowNull: false,
+            allowNull: false,
             type: DataTypes.TEXT
         }
+    }, {
+        tableName: 'questions'
     });
 }

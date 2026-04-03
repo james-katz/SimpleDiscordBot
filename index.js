@@ -1,11 +1,9 @@
 const { Client, GatewayIntentBits, ModalSubmitInteraction } = require('discord.js');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
 const dotenv = require('dotenv');
-const axios = require('axios');
 const Trivia = require('./trivia');
-
-const SERVER_DB = 'http://localhost:3000' ;
+const sequelize = require('./sequelize/index');
 
 dotenv.config();
 
@@ -18,11 +16,126 @@ const client = new Client({
 
 console.log("Booting...");
 
+const RANK_PAGE_SIZE = 10;
+
 client.once('ready', () => {
     console.log("Ready!");    
 });
 
+sequelize.authenticate()
+.then(async () => {
+    await sequelize.sync();
+    console.log('Database up and running!');
+})
+.catch(err => {
+    console.log('Fatal: No connection to the database!');
+    console.log(err);
+    process.exit(1);
+});
+
+async function getSequentialQuestions(lang = 'pt') {
+    return sequelize.models.question.findAll({
+        where: {
+            language: lang
+        },
+        order: [['id', 'ASC']]
+    });
+}
+
+function getRankEmoji(position) {
+    if (position === 1) return '🏆';
+    if (position === 2) return '🥈';
+    if (position === 3) return '🥉';
+    return '🏅';
+}
+
+async function getRankPage(page) {
+    const safePage = Math.max(0, page);
+    const { count, rows } = await sequelize.models.rank.findAndCountAll({
+        order: [
+            ['correctAnswers', 'DESC'],
+            ['wrongAnswers', 'ASC'],
+            ['updatedAt', 'ASC']
+        ],
+        limit: RANK_PAGE_SIZE,
+        offset: safePage * RANK_PAGE_SIZE
+    });
+
+    return {
+        rows,
+        totalUsers: count,
+        totalPages: Math.max(1, Math.ceil(count / RANK_PAGE_SIZE)),
+        page: safePage
+    };
+}
+
+async function buildRankMessage(requesterId, page) {
+    const rankPage = await getRankPage(page);
+    const currentPage = Math.min(rankPage.page, rankPage.totalPages - 1);
+    const pageData = currentPage === rankPage.page ? rankPage : await getRankPage(currentPage);
+
+    const embed = new EmbedBuilder()
+        .setColor(0xf4b728)
+        .setTitle('Trivia Ranking')
+        .setFooter({ text: `Page ${currentPage + 1}/${pageData.totalPages} • ${pageData.totalUsers} ranked users` })
+        .setTimestamp();
+
+    if (!pageData.rows.length) {
+        embed.setDescription('No ranking data yet.');
+    }
+    else {
+        const startPosition = currentPage * RANK_PAGE_SIZE;
+        for (let i = 0; i < pageData.rows.length; i++) {
+            const rankEntry = pageData.rows[i];
+            const position = startPosition + i + 1;
+            const trophy = getRankEmoji(position);
+            const label = `${trophy} #${position} Lugar`;
+            embed.addFields({
+                name: label,
+                value: `<@${rankEntry.userId}>\nAcertos: ${rankEntry.correctAnswers}\nErros: ${rankEntry.wrongAnswers}`,
+                inline: false
+            });
+        }
+    }
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(`rank_prev_${requesterId}_${currentPage}`)
+            .setEmoji('◀️')
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(currentPage === 0),
+        new ButtonBuilder()
+            .setCustomId(`rank_next_${requesterId}_${currentPage}`)
+            .setEmoji('▶️')
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(currentPage >= pageData.totalPages - 1)
+    );
+
+    return {
+        embeds: [embed],
+        components: [row]
+    };
+}
+
 client.on('interactionCreate', async interaction => {
+    if (interaction.isButton() && interaction.customId.startsWith('rank_')) {
+        const [, direction, ownerId, pageValue] = interaction.customId.split('_');
+        const currentPage = Number(pageValue);
+
+        if (interaction.user.id !== ownerId) {
+            await interaction.reply({
+                content: 'Only the user who opened this ranking can navigate it.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const targetPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+        const message = await buildRankMessage(ownerId, targetPage);
+        await interaction.update(message);
+        return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
     
     const { commandName } = interaction;
@@ -40,18 +153,7 @@ client.on('interactionCreate', async interaction => {
         
         let prize = "";
         prize = interaction.options.getString('prize');
-        if(prize) prize = prize.replace(/,/g, '.');
-
-        if(prize >= 5) {
-            interaction.editReply({embeds: [{
-                color: 0xff0000,
-                title: '🚫 Tip amount too high!',
-                description: 'Right now I can only send ammounts less than $5 USD.'
-            }]});
-            return;
-        }
-
-        else if(!prize) {
+        if(!prize) {
             interaction.editReply({embeds: [{
                 color: 0xff0000,
                 title: '🚫 This command requires a prize amnount!',
@@ -60,58 +162,43 @@ client.on('interactionCreate', async interaction => {
             return;
         }
 
+        prize = prize.replace(/,/g, '.');
+
         console.log('Um quiz foi iniciado por ' + interaction.user.username + '.');        
         
-        const guildId = interaction.guild.id;
-        // console.log(guildId);
-        // Hotfix for now, deal with it later xD
-        // if(guildId != '978714252934258779' && guildId != '1022920863303090206' && guildId != '554694662431178782') {
-        //     interaction.editReply({embeds: [{
-        //         color: 0xff0000,
-        //         title: '🚫 Bot disabled on this server!',
-        //         description: 'This bot is opensource, but the virtual cloud computing it runs on is paid.\nIf you want this bot in your discord server, please host it by your own means or contact the administrator for a special offer.'
-        //     }]});
-        //     return;
-        // }
-
         let lang = interaction.options.getString('language');
 
         let validLang = lang == 'pt' || lang == 'en' || lang == 'es';
         if(!validLang) {
-           await axios.get(SERVER_DB+'/guildlang/'+guildId)
-            .then((res) => {
-                lang = res.data;
-            });        
+            lang = 'pt';
         }
         lang = 'pt';
         let questionIdx = 0;
-        
-        axios.get(SERVER_DB+'/getseq/978714252934258779')
-        .then(res => {
-            if(res.data.error) {
+
+        getSequentialQuestions(lang)
+        .then(questions => {
+            if(!questions.length) {
                 console.log('no question received')
                 interaction.editReply({content:'Acabaram-se as perguntas'});
 
                 return;
             }
             console.log(`Starting question ${questionIdx}\n\n`);
-            let question = res.data[questionIdx];            
+            let question = questions[questionIdx];
             let trivia = new Trivia(interaction, question, lang, prize);
             trivia.startTrivia(questionIdx);
-            // await axios.delete(SERVER_DB+'/delete/' + question.id);
             questionIdx ++;
             
             let timer = setInterval(async () => {
                 console.log(`Starting question ${questionIdx}\n\n`);
                 
                 setTimeout(async() => {
-                    let question = res.data[questionIdx];  
+                    let question = questions[questionIdx];
                     
                     let trivia = new Trivia(interaction, question, lang, prize);    
                     trivia.startTrivia(questionIdx);
-                    // await axios.delete(SERVER_DB+'/delete/' + question.id);
                     questionIdx ++;
-                    if(questionIdx >= res.data.length) {
+                    if(questionIdx >= questions.length) {
                         console.log("clearing timer")
                         clearInterval(timer);
                     }
@@ -194,11 +281,27 @@ client.on('interactionCreate', async interaction => {
             setTimeout(() => {
                 trivia.startTrivia();    
             }, 1000);            
-        }).catch((err) => console.log(err));
+        }).catch((err) => {
+            if (err.name === 'InteractionCollectorError' && err.message.includes('reason: time')) {
+                return;
+            }
+
+            console.log(err);
+        });
     }
-    else if(commandName === 'manage') {        
-        //interaction.reply({content: 'To manage the quiz questions, access the link: http:///3.145.101.81/login/'+ interaction.guild.id +'\nWARNING: Do NOT share this links with anyone!', ephemeral: true});
-        interaction.reply({content: 'Disabled', ephemeral: true});
+    else if(commandName === 'rank') {
+        await interaction.deferReply();
+
+        try {
+            const message = await buildRankMessage(interaction.user.id, 0);
+            await interaction.editReply(message);
+        }
+        catch (err) {
+            console.log(err);
+            await interaction.editReply({
+                content: 'Unable to load the ranking right now.'
+            });
+        }
     }
 });
 

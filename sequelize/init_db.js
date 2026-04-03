@@ -17,11 +17,7 @@ sequelize.authenticate()
 
 async function init_db() {
     await sequelize.sync({ force: true });
-    const guild = sequelize.models.guild;
-
-    const zcash = await guild.create({id: "978714252934258779", name: "Zcash Latam", language: 'pt'});
-    // const shapeshift = await guild.create({id: "554694662431178782", name: "Shepashift", language: 'en'});
-    // const carabela = await guild.create({id: "934624477898227754", name: "Carabela", language: 'en'});
+    const question = sequelize.models.question;
 
     let questions = [
         // {
@@ -206,7 +202,7 @@ async function init_db() {
         // }        
     ];
 
-    insertQuestions(zcash, questions);
+    insertQuestions(question, questions);
 
     // Shapeshift
     questions = [        
@@ -226,12 +222,12 @@ async function init_db() {
             lang: "es"
         }
     ];
-    // insertQuestions(shapeshift, questions);
+    // insertQuestions(question, questions);
 }
 
-async function insertQuestions(guild, questions) {
+async function insertQuestions(questionModel, questions) {
     for(const q of questions) {
-        await guild.createQuestion({
+        await questionModel.create({
             question: q.question,
             answers: q.answers,
             language: q.lang

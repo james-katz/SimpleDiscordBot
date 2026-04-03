@@ -1,6 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const Localization = require('./localization');
 const { EventEmitter } = require('events');
+const sequelize = require('./sequelize/index');
 
 class Trivia {
     constructor(interaction, question, lang, prize) {
@@ -8,6 +9,7 @@ class Trivia {
         this.question = question;
         this.lang = lang;
         this.participants = [];
+        this.participantIds = new Set();
         this.prize = prize || "";
         this.emitter = new EventEmitter();
 
@@ -23,7 +25,46 @@ class Trivia {
         return arr;
       }
 
-    startTrivia(idx) {        
+    async upsertRankEntry(participant, guessedRight) {
+        await sequelize.models.user.findOrCreate({
+            where: {
+                id: participant.id
+            }
+        });
+
+        const [rank] = await sequelize.models.rank.findOrCreate({
+            where: {
+                userId: participant.id
+            },
+            defaults: {
+                correctAnswers: 0,
+                wrongAnswers: 0
+            }
+        });
+
+        if (guessedRight) {
+            await rank.increment('correctAnswers');
+            return;
+        }
+
+        await rank.increment('wrongAnswers');
+    }
+
+    async registerTriviaResults(correctAnswer) {
+        for (const participant of this.participants) {
+            const guessedRight = participant.guess === correctAnswer;
+            await this.upsertRankEntry(participant, guessedRight);
+        }
+    }
+
+    getParticipantsFooter(local) {
+        const count = this.participants.length;
+        const label = count === 1 ? local.text.triviaStartParticipant : local.text.triviaStartParticipants;
+        return `${count} ${label}`;
+    }
+
+    startTrivia() {        
+        const idx = this.interaction.id;
         let quiz = this.question;
         let shuffledAnswers = this.fyShuffle(quiz.answers);
         let answerList = "";
@@ -61,7 +102,7 @@ class Trivia {
                 {name:'\u200B', value:'**'+ local.text.triviaStartAnswers +'**\n' + answerList},
             )
             .setTimestamp()
-            .setFooter({text: local.text.triviaStartEndsIn});
+            .setFooter({text: this.getParticipantsFooter(local)});
 
         var buttons = [];
         var correctAnswer = '';
@@ -88,7 +129,6 @@ class Trivia {
             }
             buttons[i] = new ButtonBuilder()
                 .setCustomId('answer_'+i+'_'+idx)
-                // .setLabel(shuffledAnswers[i].substring(0,80))
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji(emoji);
         }
@@ -96,33 +136,44 @@ class Trivia {
 
         this.interaction.followUp( {embeds: [embedQuiz], components: [row]} )
             .then(async (triviaMsg) => {
-                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45 * 1000 });
+                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45*1000 });
 
-                collector.on('collect', i => {                    
-                    if(i.user.id === this.interaction.user.id) {
-                        i.reply({embeds: [{
-                            title: local.text.triviaErrorOwnTrivia,
-                            color: 0xff0000
-                        }], ephemeral: true});
-                        return false;
-                    };
-                    for(let j = 0; j < this.participants.length; j ++) {                        
-                        if(this.participants[j].user === i.user.id) {
-                            i.reply({embeds: [{
+                collector.on('collect', async i => {
+                    try {
+                        if(i.user.id === this.interaction.user.id) {
+                            await i.reply({embeds: [{
+                                title: local.text.triviaErrorOwnTrivia,
+                                color: 0xff0000
+                            }], ephemeral: true});
+                            return;
+                        }
+
+                        if(this.participantIds.has(i.user.id)) {
+                            await i.reply({embeds: [{
                                 title: local.text.triviaErrorJoined,
                                 color: 0xff0000
                             }], ephemeral: true});
-                            return false;
+                            return;
                         }
+                        
+                        let userGuess = {
+                            id: i.user.id,
+                            guess: i.customId
+                        };
+
+                        this.participants.push(userGuess);
+                        this.participantIds.add(i.user.id);
+                        
+                        await i.deferUpdate();
+                        embedQuiz.setFooter({text: this.getParticipantsFooter(local)});
+                        await triviaMsg.edit({embeds: [embedQuiz], components: [row]});
                     }
-                    
-                    let userGuess = {user: i.user.id, guess: i.customId};
-                    this.participants.push(userGuess);
-                    
-                    i.deferUpdate();
+                    catch (err) {
+                        console.log('Error handling trivia answer:', err);
+                    }
                 });
                 
-                collector.on('end', collected => {
+                collector.on('end', async (collected, reason) => {
                     var winners = [];
                     var loosers = [];
                     let triviaFinished = new EmbedBuilder()
@@ -137,8 +188,8 @@ class Trivia {
 
                     if(collected.size > 0) {                        
                         for(let j = 0; j < this.participants.length; j ++) {
-                            if(this.participants[j].guess == correctAnswer) winners.push('<@'+this.participants[j].user+'>');
-                            else loosers.push('<@'+this.participants[j].user+'>');
+                            if(this.participants[j].guess == correctAnswer) winners.push('<@'+this.participants[j].id+'>');
+                            else loosers.push('<@'+this.participants[j].id+'>');
                         }
                         if(winners.length > 0) {
                             triviaFinished.data.description = winners.length + (winners.length == 1 ? (' '+ local.text.triviaEndedUserGuess +' ') : (' ' + local.text.triviaEndedUsersGuess + ' ')) + local.text.triviaEndedTriviaBy +' <@' + this.interaction.user.id +'> ' + local.text.triviaEndedQuestion + ' ' + quiz.question;
@@ -163,7 +214,12 @@ class Trivia {
                     let row = new ActionRowBuilder().addComponents(buttons);
 
                     triviaMsg.edit( {embeds: [triviaFinished], components: [row]} )
-                        .then(() => {
+                        .then(async () => {
+                            await this.registerTriviaResults(correctAnswer)
+                                .catch((err) => {
+                                    console.log('Error updating rank:', err);
+                                });
+
                             setTimeout(() => {
                                 // let tip = 'Ninguém acertou, ninguém recebe tips!';
                                 if(winners.length > 0 && this.prize) {
@@ -171,6 +227,7 @@ class Trivia {
                                     this.interaction.followUp({content: tip});
                                 }
                                 this.participants = [];
+                                this.participantIds.clear();
                                 this.emitter.emit('end');
                             }, 800);
                         })
