@@ -17,7 +17,7 @@ const client = new Client({
 console.log("Booting...");
 
 const RANK_PAGE_SIZE = 10;
-const RANK_RESET_ROLE_ID = '1521648444601536512';
+const RANK_RESET_ROLE_ID = '1078741799306268727';
 
 client.once('ready', () => {
     console.log("Ready!");    
