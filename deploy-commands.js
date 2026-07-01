@@ -30,7 +30,12 @@ const commands = [
 	
 	new SlashCommandBuilder()
 		.setName('rank')
-		.setDescription('Displays the trivia ranking.')
+		.setDescription('Displays the trivia ranking.'),
+
+	new SlashCommandBuilder()
+		.setName('reset-ranking')
+		.setDescription('Resets all trivia ranking scores.')
+		.setDMPermission(false)
 ].map(command => command.toJSON());
 
 rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands })

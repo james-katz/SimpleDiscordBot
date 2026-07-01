@@ -17,6 +17,7 @@ const client = new Client({
 console.log("Booting...");
 
 const RANK_PAGE_SIZE = 10;
+const RANK_RESET_ROLE_ID = '1521648444601536512';
 
 client.once('ready', () => {
     console.log("Ready!");    
@@ -115,6 +116,15 @@ async function buildRankMessage(requesterId, page) {
         embeds: [embed],
         components: [row]
     };
+}
+
+function memberHasRole(interaction, roleId) {
+    if (!interaction.inGuild()) return false;
+
+    const roles = interaction.member?.roles;
+    if (roles?.cache) return roles.cache.has(roleId);
+
+    return Array.isArray(roles) && roles.includes(roleId);
 }
 
 client.on('interactionCreate', async interaction => {
@@ -300,6 +310,37 @@ client.on('interactionCreate', async interaction => {
             console.log(err);
             await interaction.editReply({
                 content: 'Unable to load the ranking right now.'
+            });
+        }
+    }
+    else if(commandName === 'reset-ranking') {
+        if (!memberHasRole(interaction, RANK_RESET_ROLE_ID)) {
+            await interaction.reply({
+                content: 'You do not have permission to reset the ranking.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            const deletedEntries = await sequelize.transaction(async transaction => {
+                return sequelize.models.rank.destroy({
+                    where: {},
+                    transaction
+                });
+            });
+
+            console.log(`Ranking reset by ${interaction.user.username} (${interaction.user.id}). Deleted ${deletedEntries} entries.`);
+            await interaction.editReply({
+                content: `Ranking reset successfully. Deleted ${deletedEntries} entries.`
+            });
+        }
+        catch (err) {
+            console.log('Unable to reset ranking:', err);
+            await interaction.editReply({
+                content: 'Unable to reset the ranking right now.'
             });
         }
     }

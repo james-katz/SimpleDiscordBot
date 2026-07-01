@@ -136,7 +136,7 @@ class Trivia {
 
         this.interaction.followUp( {embeds: [embedQuiz], components: [row]} )
             .then(async (triviaMsg) => {
-                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 45*1000 });
+                const collector = triviaMsg.createMessageComponentCollector({ componentType: ComponentType.Button, time: 40 * 1000 });
 
                 collector.on('collect', async i => {
                     try {
