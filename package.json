@@ -1,19 +1,49 @@
 {
   "name": "ZecBot",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist-platform/bin/app.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prestart": "npm run build",
+    "start": "node dist-platform/bin/app.js",
+    "start:platform": "node dist-platform/bin/app.js",
+    "start:legacy": "node index.js",
+    "dev:platform": "tsx watch src/bin/app.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "node --import tsx src/bin/migrate.ts",
+    "db:import-legacy": "node --import tsx src/bin/import-legacy.ts",
+    "admin:create": "node --import tsx src/bin/create-admin.ts",
+    "commands:deploy:platform": "node --import tsx src/bin/deploy-commands.ts"
   },
   "author": "James Katz",
   "license": "MIT",
   "description": "A simple discord bot for creating and managing trivias.",
+  "engines": {
+    "node": ">=22.12"
+  },
   "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^11.0.0",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.6",
+    "argon2": "^0.44.0",
     "discord.js": "^14.9.0",
     "dotenv": "^16.0.3",
+    "fastify": "^5.9.0",
     "sequelize": "^6.26.0",
     "sqlite3": "^5.1.2",
+    "umzug": "^3.8.3",
     "vue-router": "^4.0.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
   }
 }

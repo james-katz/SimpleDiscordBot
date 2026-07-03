@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+const legacyCommandsEnabled = process.env.LEGACY_COMMANDS_ENABLED === 'true';
 
 rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
 	.then(() => console.log('Successfully deleted all global application commands.'))
@@ -36,7 +37,8 @@ const commands = [
 		.setName('reset-ranking')
 		.setDescription('Resets all trivia ranking scores.')
 		.setDMPermission(false)
-].map(command => command.toJSON());
+].filter(command => legacyCommandsEnabled || !['jasperquiz', 'singlequiz', 'reset-ranking'].includes(command.name))
+	.map(command => command.toJSON());
 
 rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands })
 	.then((data) => console.log(`Successfully registered ${data.length} global application commands.`))

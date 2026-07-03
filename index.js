@@ -18,6 +18,7 @@ console.log("Booting...");
 
 const RANK_PAGE_SIZE = 10;
 const RANK_RESET_ROLE_ID = '1078741799306268727';
+const LEGACY_COMMANDS_ENABLED = process.env.LEGACY_COMMANDS_ENABLED === 'true';
 
 client.once('ready', () => {
     console.log("Ready!");    
@@ -149,6 +150,13 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     
     const { commandName } = interaction;
+    if (['jasperquiz', 'singlequiz', 'reset-ranking'].includes(commandName) && !LEGACY_COMMANDS_ENABLED) {
+        await interaction.reply({
+            content: 'This legacy command is disabled.',
+            ephemeral: true
+        });
+        return;
+    }
     if(commandName === 'jasperquiz') {    
         await interaction.deferReply();
 

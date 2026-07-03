@@ -5,3 +5,8 @@ questions.json.old
 questions.json
 questions-en.json
 .env
+dbs/*.sqlite
+dbs/*.sqlite-*
+sequelize/dbs/*.sqlite*
+coverage
+dist-platform
