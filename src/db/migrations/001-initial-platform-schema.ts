@@ -53,7 +53,6 @@ export async function up(queryInterface: QueryInterface): Promise<void> {
     status: { type: DataTypes.STRING(16), allowNull: false, defaultValue: 'draft' },
     default_question_duration_seconds: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 40 },
     version: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
-    is_legacy: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     created_by_api_user_id: {
       type: DataTypes.UUID,
       allowNull: true,
@@ -143,7 +142,6 @@ export async function up(queryInterface: QueryInterface): Promise<void> {
       onDelete: 'SET NULL',
       onUpdate: 'CASCADE',
     },
-    is_legacy: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     eligible_for_overall: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     started_at: { type: DataTypes.DATE, allowNull: true },
     completed_at: { type: DataTypes.DATE, allowNull: true },

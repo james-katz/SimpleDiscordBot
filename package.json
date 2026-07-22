@@ -6,14 +6,12 @@
     "prestart": "npm run build",
     "start": "node dist-platform/bin/app.js",
     "start:platform": "node dist-platform/bin/app.js",
-    "start:legacy": "node index.js",
     "dev:platform": "tsx watch src/bin/app.ts",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "node --import tsx src/bin/migrate.ts",
-    "db:import-legacy": "node --import tsx src/bin/import-legacy.ts",
     "admin:create": "node --import tsx src/bin/create-admin.ts",
     "commands:deploy:platform": "node --import tsx src/bin/deploy-commands.ts"
   },
@@ -36,8 +34,7 @@
     "fastify": "^5.9.0",
     "sequelize": "^6.26.0",
     "sqlite3": "^5.1.2",
-    "umzug": "^3.8.3",
-    "vue-router": "^4.0.13"
+    "umzug": "^3.8.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

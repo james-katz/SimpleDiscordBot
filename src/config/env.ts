@@ -8,6 +8,7 @@ export type AppConfig = {
   host: string;
   port: number;
   databasePath: string;
+  sqlLogging: boolean;
   corsOrigins: string[];
   jwtAccessSecret: string;
   jwtIssuer: string;
@@ -20,7 +21,6 @@ export type AppConfig = {
   discordGuildId?: string;
   moderatorRoleIds: Set<string>;
   rankAdminRoleIds: Set<string>;
-  legacyCommandsEnabled: boolean;
 };
 
 function integer(name: string, fallback: number, minimum: number, maximum: number): number {
@@ -81,6 +81,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     host: process.env.HOST ?? '127.0.0.1',
     port: integer('PORT', 3000, 1, 65535),
     databasePath,
+    sqlLogging: boolean('SQL_LOGGING', false),
     corsOrigins: csv('CORS_ORIGINS'),
     jwtAccessSecret,
     jwtIssuer: process.env.JWT_ISSUER ?? 'zecquiz-api',
@@ -93,7 +94,6 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     discordGuildId: process.env.GUILD_ID || undefined,
     moderatorRoleIds: snowflakeSet('DISCORD_MODERATOR_ROLE_IDS'),
     rankAdminRoleIds: snowflakeSet('DISCORD_RANK_ADMIN_ROLE_IDS'),
-    legacyCommandsEnabled: boolean('LEGACY_COMMANDS_ENABLED', false),
     ...overrides,
   };
 }

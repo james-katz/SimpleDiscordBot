@@ -21,7 +21,7 @@ export class RunService {
   constructor(private readonly models: PlatformModels) {}
 
   async listPublishedForAutocomplete(search: string, limit = 25) {
-    const where: any = { status: 'published', isLegacy: false };
+    const where: any = { status: 'published' };
     if (search.trim()) where.name = { [Op.like]: `%${search.trim()}%` };
     const rows = await this.models.Trivia.findAll({
       where,
@@ -41,7 +41,7 @@ export class RunService {
       if (existing) throw new ConflictError('This channel already has an active trivia run');
 
       const trivia = await this.models.Trivia.findOne({
-        where: { id: triviaId, status: 'published', isLegacy: false },
+        where: { id: triviaId, status: 'published' },
         include: [{
           model: this.models.Question,
           as: 'questions',
@@ -66,7 +66,6 @@ export class RunService {
         guildId,
         channelId,
         startedByDiscordUserId: user.get('id'),
-        isLegacy: false,
         eligibleForOverall: true,
         rankingSeasonId: activeSeason?.get('id') ?? null,
       }, { transaction });
@@ -105,6 +104,7 @@ export class RunService {
         triviaId,
         name: snapshot.name as string,
         description: snapshot.description as string,
+        language: snapshot.language as string,
         questionCount: snapshot.questions.length as number,
         defaultQuestionDurationSeconds: snapshot.defaultQuestionDurationSeconds as number,
         status: 'waiting' as const,
@@ -157,6 +157,11 @@ export class RunService {
     return this.models.Trivia.sequelize!.transaction(async (transaction) => {
       const question = await this.models.RunQuestion.findOne({
         where: { id: runQuestionId, status: 'open', closesAt: { [Op.gt]: now } },
+        include: [{
+          model: this.models.TriviaRun,
+          as: 'run',
+          include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['language'] }],
+        }],
         transaction,
       });
       if (!question) throw new ConflictError('This question is closed');
@@ -184,7 +189,8 @@ export class RunService {
         }
         throw error;
       }
-      return { recorded: true };
+      const json = question.toJSON() as any;
+      return { recorded: true, language: json.run?.trivia?.language as string | undefined };
     });
   }
 
@@ -253,6 +259,17 @@ export class RunService {
         status: 'between_questions',
       }, { where: { id: runId }, transaction });
 
+      // Auto-archive the parent trivia when the run finishes
+      if (completed) {
+        const run = await this.models.TriviaRun.findByPk(runId, { attributes: ['triviaId'], transaction });
+        if (run) {
+          await this.models.Trivia.update(
+            { status: 'archived', archivedAt: now },
+            { where: { id: run.get('triviaId') as string, status: 'published' }, transaction },
+          );
+        }
+      }
+
       await this.audit('trivia-run.question-close', 'run-question', runQuestionId, {
         runId, completed, responseCount: responses.length,
       }, transaction);
@@ -314,7 +331,7 @@ export class RunService {
 
   async getRun(runId: string) {
     const run = await this.models.TriviaRun.findByPk(runId, {
-      include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['id', 'name', 'description'] }],
+      include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['id', 'name', 'description', 'language'] }],
     });
     if (!run) throw new NotFoundError('Trivia run');
     return run.toJSON();
@@ -323,7 +340,7 @@ export class RunService {
   async getActiveRun(channelId: string) {
     const run = await this.models.TriviaRun.findOne({
       where: { channelId, status: { [Op.in]: ['waiting', 'in_progress', 'between_questions'] } },
-      include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['id', 'name', 'description'] }],
+      include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['id', 'name', 'description', 'language'] }],
       order: [['createdAt', 'DESC']],
     });
     if (!run) throw new NotFoundError('Active trivia run');
@@ -336,7 +353,7 @@ export class RunService {
     });
     if (!question) throw new NotFoundError('Run question');
     const run = await this.models.TriviaRun.findByPk(question.get('triviaRunId') as string, {
-      include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['name'] }],
+      include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['name', 'language'] }],
     });
     if (!run) throw new NotFoundError('Trivia run');
     const participants = await this.models.Response.sequelize!.query<Record<string, unknown>>(`
@@ -357,7 +374,7 @@ export class RunService {
     if (decoded && (typeof decoded.completedAt !== 'string' || typeof decoded.id !== 'string' || Number.isNaN(Date.parse(decoded.completedAt)))) {
       throw new ValidationError('Pagination cursor is invalid');
     }
-    const baseWhere = { status: 'completed', isLegacy: false };
+    const baseWhere = { status: 'completed' };
     const where = {
       ...baseWhere,
       ...(decoded ? {
@@ -510,7 +527,14 @@ export class RunService {
   private async openQuestion(runId: string, position: number, now: Date, transaction: Transaction) {
     const question = await this.models.RunQuestion.findOne({
       where: { triviaRunId: runId, position, status: 'pending' },
-      include: [{ model: this.models.RunQuestionOption, as: 'options' }],
+      include: [
+        { model: this.models.RunQuestionOption, as: 'options' },
+        {
+          model: this.models.TriviaRun,
+          as: 'run',
+          include: [{ model: this.models.Trivia, as: 'trivia', attributes: ['language'] }],
+        },
+      ],
       transaction,
     });
     if (!question) throw new NotFoundError('Next run question');

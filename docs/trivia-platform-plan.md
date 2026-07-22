@@ -3,7 +3,7 @@
 Status: **Approved for implementation on 2026-07-02**  
 The recommendations in section 13 are approved, subject to the SQLite and other inline DEV NOTE overrides in this document.
 
-Implementation status: **Code complete on 2026-07-02.** Production secrets, command registration, and live Discord acceptance remain operational deployment tasks.
+Implementation status: **Code complete on 2026-07-02; local dashboard, `en`/`pt-BR` bot localization, live participant counts, and legacy-code removal completed on 2026-07-06.** Production secrets, command registration, and live Discord acceptance remain operational deployment tasks.
 
 ## 1. Outcome
 
@@ -141,7 +141,7 @@ erDiagram
 - `id` UUID primary key.
 - `name` required, trimmed, maximum length defined by API schema.
 - `description` required or explicitly nullable; maximum length defined.
-- `language` BCP-47-compatible short code, defaulting to the configured language.
+- `language`: `en` or `pt-BR`, defaulting to `en`; it controls Discord presentation text.
 - `status`: `draft`, `published`, or `archived`.
 - `default_question_duration_seconds`, bounded to an approved range.
 - `created_by_api_user_id`, `created_at`, `updated_at`, `published_at`.
@@ -303,7 +303,7 @@ Recommended command namespace:
 
 `/trivia start` is preferable to a top-level `/start` because it leaves a coherent namespace for operational recovery commands. Autocomplete displays the trivia name and a short ID while passing the UUID value. Only published, non-archived trivia are selectable.
 
-Keep `/singlequiz` temporarily behind a legacy feature flag during rollout, then remove it after the new flow is accepted. Replace or deprecate `/jasperquiz` rather than maintaining two run engines.
+The retired `/singlequiz` and `/jasperquiz` commands and their runtime have been removed; `/trivia` is the only run engine.
 
 ### 7.2 Moderator authorization
 
@@ -368,7 +368,7 @@ The same scoring service must serve Discord and API results.
 - Users are upserted with fresh display metadata when they answer or moderate.
 
 The existing `/reset-ranking` behavior needs a product decision. Deleting historical responses conflicts with auditability. Recommended replacement: administrative exclusion/reset records or starting a new ranking season. A later `ranking_seasons` table can define weekly/monthly/all-time leaderboards without destructive deletion.
-DEV NOTE: /reset-ranking must be gated behing legacy flag until it is removed. I don't think this command should exist in the new platform.
+The destructive `/reset-ranking` command has been removed. Ranking seasons and explicit run exclusions provide the supported replacement.
 
 ## 9. Migration and compatibility strategy
 Create a new sqlite database file.
@@ -472,7 +472,7 @@ The following recommended choices were approved on 2026-07-02.
 - [x] **Ranking ties:** points, correct, wrong, stable ID.
 - [x] **Public identity:** display name plus application public user ID; avatars are not public initially.
 - [x] **Authentication:** local API users with Argon2id, short JWT access tokens, and rotating refresh cookies.
-- [x] **Legacy commands:** temporarily feature-flag `/singlequiz` and `/jasperquiz`.
-- [x] **Ranking reset:** omit destructive reset from the new platform; legacy command remains feature-flagged until removal.
+- [x] **Legacy commands:** remove `/singlequiz`, `/jasperquiz`, and the previous run engine after platform acceptance.
+- [x] **Ranking reset:** remove destructive reset; use ranking seasons and run exclusions.
 
 Inline final considerations override earlier general recommendations. In particular, the first platform release uses a new SQLite database managed by versioned migrations rather than PostgreSQL.

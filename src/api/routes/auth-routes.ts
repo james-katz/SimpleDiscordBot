@@ -9,7 +9,7 @@ const credentialsSchema = {
   required: ['username', 'password'],
   properties: {
     username: { type: 'string', minLength: 3, maxLength: 64 },
-    password: { type: 'string', minLength: 12, maxLength: 256 },
+    password: { type: 'string', minLength: 6, maxLength: 256 },
   },
 } as const;
 

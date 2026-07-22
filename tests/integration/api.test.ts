@@ -20,6 +20,7 @@ describe('management API', () => {
       host: '127.0.0.1',
       port: 3000,
       databasePath: path.join(directory, 'platform.sqlite'),
+      sqlLogging: false,
       corsOrigins: [],
       jwtAccessSecret: 'integration-test-secret-with-at-least-32-characters',
       jwtIssuer: 'test-api',
@@ -29,11 +30,10 @@ describe('management API', () => {
       cookieSecure: false,
       moderatorRoleIds: new Set(),
       rankAdminRoleIds: new Set(),
-      legacyCommandsEnabled: false,
     };
     database = await createDatabase(config);
     await database.migrator.up();
-    await new AuthService(database.models, config).createAdmin('admin', 'a-valid-testing-password');
+    await new AuthService(database.models, config).createAdmin('admin', 'quiz42');
     api = await buildApi(config, database.models);
   });
 
@@ -43,6 +43,30 @@ describe('management API', () => {
     await rm(directory, { recursive: true, force: true });
   });
 
+  it('serves the local dashboard and its assets', async () => {
+    const dashboard = await api.inject({ method: 'GET', url: '/dashboard' });
+    expect(dashboard.statusCode).toBe(200);
+    expect(dashboard.headers['content-type']).toContain('text/html');
+    expect(dashboard.body).toContain('ZecQuiz Dashboard');
+
+    const script = await api.inject({ method: 'GET', url: '/dashboard/app.js' });
+    expect(script.statusCode).toBe(200);
+    expect(script.headers['content-type']).toContain('text/javascript');
+  });
+
+  it('publishes the supported trivia languages for frontend clients', async () => {
+    const response = await api.inject({ method: 'GET', url: '/api/v1/public/languages' });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['cache-control']).toBe('public, max-age=3600');
+    expect(response.json().data).toEqual({
+      default: 'en',
+      items: [
+        { code: 'en', label: 'English', nativeLabel: 'English' },
+        { code: 'pt-BR', label: 'Brazilian Portuguese', nativeLabel: 'Português (Brasil)' },
+      ],
+    });
+  });
+
   it('protects writes and keeps correct answers out of public responses', async () => {
     const denied = await api.inject({ method: 'POST', url: '/api/v1/trivias', payload: {} });
     expect(denied.statusCode).toBe(401);
@@ -50,7 +74,7 @@ describe('management API', () => {
     const login = await api.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
-      payload: { username: 'admin', password: 'a-valid-testing-password' },
+      payload: { username: 'admin', password: 'quiz42' },
     });
     expect(login.statusCode).toBe(200);
     const accessToken = login.json().accessToken as string;
@@ -118,7 +142,7 @@ describe('management API', () => {
     const login = await api.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
-      payload: { username: 'admin', password: 'a-valid-testing-password' },
+      payload: { username: 'admin', password: 'quiz42' },
     });
     const firstRefresh = login.cookies.find((cookie) => cookie.name === 'zecquiz_refresh')!.value;
 
@@ -155,7 +179,7 @@ describe('management API', () => {
   it('manages ranking seasons through authenticated routes', async () => {
     const login = await api.inject({
       method: 'POST', url: '/api/v1/auth/login',
-      payload: { username: 'admin', password: 'a-valid-testing-password' },
+      payload: { username: 'admin', password: 'quiz42' },
     });
     const authorization = `Bearer ${login.json().accessToken}`;
     const created = await api.inject({

@@ -2,14 +2,12 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Sequelize } from 'sequelize';
 import { createDatabase } from '../../src/db';
 import type { PlatformModels } from '../../src/db/models';
 import { QuestionDeadlineWorker } from '../../src/jobs/question-deadline-worker';
 import { RunService } from '../../src/services/run-service';
 import { RankingSeasonService } from '../../src/services/ranking-season-service';
 import { TriviaService } from '../../src/services/trivia-service';
-import { importLegacyData } from '../../src/services/legacy-import-service';
 
 describe('platform persistence', () => {
   let directory: string;
@@ -18,7 +16,7 @@ describe('platform persistence', () => {
 
   beforeEach(async () => {
     directory = await mkdtemp(path.join(os.tmpdir(), 'zecquiz-test-'));
-    database = await createDatabase({ databasePath: path.join(directory, 'platform.sqlite'), nodeEnv: 'test' });
+    database = await createDatabase({ databasePath: path.join(directory, 'platform.sqlite') });
     await database.migrator.up();
     models = database.models;
   });
@@ -62,17 +60,22 @@ describe('platform persistence', () => {
     const question = await runs.startRun(run.id, new Date('2026-01-01T00:00:00Z')) as any;
     const correctOption = question.options.find((option: any) => option.isCorrect);
     const wrongOption = question.options.find((option: any) => !option.isCorrect);
-    await runs.submitAnswer(question.id, correctOption.id, {
+    const firstAnswer = await runs.submitAnswer(question.id, correctOption.id, {
       discordUserId: '123456789012345678',
       username: 'player',
       displayName: 'Player',
     }, new Date('2026-01-01T00:00:01Z'));
+    expect(firstAnswer.language).toBe('en');
     await runs.submitAnswer(question.id, wrongOption.id, {
       discordUserId: '223456789012345678', username: 'player-two', displayName: 'Player Two',
     }, new Date('2026-01-01T00:00:02Z'));
     await runs.submitAnswer(question.id, correctOption.id, {
       discordUserId: '323456789012345678', username: 'player-three', displayName: 'Player Three',
     }, new Date('2026-01-01T00:00:03Z'));
+
+    const liveQuestion = await runs.getQuestionForDisplay(question.id) as any;
+    expect(liveQuestion.participants).toHaveLength(3);
+    expect(liveQuestion.run.trivia.language).toBe('en');
 
     const result = await runs.closeQuestion(question.id, new Date('2026-01-01T00:00:11Z'));
     expect(result.completed).toBe(true);
@@ -132,29 +135,6 @@ describe('platform persistence', () => {
     const ranking = await runs.rankings({ type: 'run', id: run.id });
     expect(ranking.items[0]).toMatchObject({ correctAnswers: 1, totalPoints: 1 });
     expect(await runs.findPendingResultPresentations()).toHaveLength(0);
-  });
-
-  it('imports and reconciles a legacy fixture exactly once', async () => {
-    const legacy = new Sequelize({ dialect: 'sqlite', storage: path.join(directory, 'legacy.sqlite'), logging: false });
-    try {
-      await legacy.query('CREATE TABLE questions (id INTEGER PRIMARY KEY, question TEXT, answers JSON, language TEXT)');
-      await legacy.query('CREATE TABLE rank (id INTEGER PRIMARY KEY, userId TEXT, correctAnswers INTEGER, wrongAnswers INTEGER)');
-      await legacy.query(
-        'INSERT INTO questions VALUES (1, :question, :answers, :language)',
-        { replacements: { question: 'Legacy question?', answers: JSON.stringify(['Correct', 'Wrong']), language: 'en' } },
-      );
-      await legacy.query("INSERT INTO rank VALUES (1, '123456789012345678', 7, 3)");
-
-      const imported = await importLegacyData(database, legacy);
-      expect(imported).toMatchObject({ alreadyImported: false, questions: 1, ranks: 1 });
-      expect(await models.Question.count()).toBe(1);
-      expect(await models.QuestionOption.count({ where: { isCorrect: true } })).toBe(1);
-      expect(await models.RunScore.sum('correctAnswers')).toBe(7);
-      expect(await models.RunScore.sum('wrongAnswers')).toBe(3);
-      expect(await importLegacyData(database, legacy)).toMatchObject({ alreadyImported: true });
-    } finally {
-      await legacy.close();
-    }
   });
 
   it('paginates trivia definitions with opaque non-overlapping cursors', async () => {

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config/env';
 import type { QuestionInput, TriviaInput } from '../../domain/trivia/validation';
+import { SUPPORTED_TRIVIA_LANGUAGES } from '../../domain/trivia/languages';
 import type { TriviaService } from '../../services/trivia-service';
 import type { IdempotencyService } from '../../services/idempotency-service';
 import { authenticate } from '../auth';
@@ -156,10 +157,8 @@ export async function registerTriviaRoutes(
     },
   }, async (request, reply) => {
     const query = request.query as { limit?: number; cursor?: string };
-    const result = await service.list({ ...query, status: 'published', isLegacy: false });
-    result.items = result.items
-      .filter((item: any) => !item.isLegacy)
-      .map((item: any) => ({
+    const result = await service.list({ ...query, status: 'published' });
+    result.items = result.items.map((item: any) => ({
         id: item.id,
         name: item.name,
         description: item.description,
@@ -169,6 +168,16 @@ export async function registerTriviaRoutes(
       }));
     reply.header('Cache-Control', 'public, max-age=30');
     return { data: result };
+  });
+
+  app.get('/api/v1/public/languages', async (_request, reply) => {
+    reply.header('Cache-Control', 'public, max-age=3600');
+    return {
+      data: {
+        default: 'en',
+        items: SUPPORTED_TRIVIA_LANGUAGES,
+      },
+    };
   });
 
   app.get('/api/v1/public/trivias/:triviaId', async (request, reply) => {

@@ -21,6 +21,13 @@ describe('trivia validation', () => {
     expect(trivia.defaultQuestionDurationSeconds).toBe(40);
   });
 
+  it('supports only English and Brazilian Portuguese', () => {
+    const base = { name: 'Quiz', description: 'Description' };
+    expect(validateTrivia({ ...base, language: 'pt-br' }).language).toBe('pt-BR');
+    expect(validateTrivia({ ...base, language: 'en' }).language).toBe('en');
+    expect(() => validateTrivia({ ...base, language: 'es' })).toThrow('en or pt-BR');
+  });
+
   it('requires exactly one correct option', () => {
     expect(() => validateQuestion({
       prompt: 'Question',

@@ -23,8 +23,8 @@ function normalizeUsername(username: string): string {
 }
 
 function validatePassword(password: string): void {
-  if (password.length < 12 || password.length > 256) {
-    throw new ValidationError('Password must contain between 12 and 256 characters');
+  if (password.length < 6 || password.length > 256) {
+    throw new ValidationError('Password must contain between 6 and 256 characters');
   }
 }
 

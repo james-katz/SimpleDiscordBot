@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZecQuiz Dashboard</title>
+  <link rel="stylesheet" href="/dashboard/app.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span>ZQ</span><div>ZecQuiz<small>Local dashboard</small></div></div>
+      <nav>
+        <button class="nav-item active" data-view="overview">Overview</button>
+        <button class="nav-item" data-view="quizzes">Quizzes</button>
+        <button class="nav-item" data-view="rankings">Participants & ranking</button>
+        <button class="nav-item" data-view="settings">Credentials</button>
+      </nav>
+      <div class="connection"><i id="connection-dot"></i><span id="connection-label">Checking API</span></div>
+    </aside>
+
+    <main>
+      <header>
+        <div><p class="eyebrow">Trivia administration</p><h1 id="page-title">Overview</h1></div>
+        <button class="primary" id="header-action">New quiz</button>
+      </header>
+      <div id="notice" class="notice" hidden></div>
+
+      <section id="view-overview" class="view active">
+        <div class="stats">
+          <article><span>Total quizzes</span><strong id="stat-quizzes">—</strong></article>
+          <article><span>Published</span><strong id="stat-published">—</strong></article>
+          <article><span>Completed runs</span><strong id="stat-runs">—</strong></article>
+          <article><span>Participants</span><strong id="stat-participants">—</strong></article>
+        </div>
+        <div class="grid-two">
+          <article class="panel"><div class="panel-title"><h2>Recent quizzes</h2><button class="link" data-go="quizzes">View all</button></div><div id="recent-quizzes" class="list empty">No quizzes loaded.</div></article>
+          <article class="panel"><div class="panel-title"><h2>Top participants</h2><button class="link" data-go="rankings">Full ranking</button></div><div id="top-ranking" class="list empty">No ranking data.</div></article>
+        </div>
+      </section>
+
+      <section id="view-quizzes" class="view">
+        <div class="toolbar">
+          <div class="filters" id="quiz-filters"><button class="active" data-status="">All</button><button data-status="draft">Draft</button><button data-status="published">Published</button><button data-status="archived">Archived</button></div>
+          <button id="refresh-quizzes" class="secondary">Refresh</button>
+        </div>
+        <div id="quiz-layout" class="quiz-layout">
+          <div id="quiz-list" class="cards empty">No quizzes loaded.</div>
+          <aside id="quiz-detail" class="detail empty">Select a quiz to manage it.</aside>
+        </div>
+      </section>
+
+      <section id="view-rankings" class="view">
+        <article class="panel">
+          <div class="ranking-controls">
+            <label>Scope<select id="ranking-scope"><option value="overall">Overall</option><option value="run">Completed run</option><option value="trivia">Quiz</option></select></label>
+            <label id="ranking-target-wrap" hidden>Selection<select id="ranking-target"></select></label>
+            <button id="refresh-ranking" class="secondary">Refresh</button>
+          </div>
+          <p class="muted" id="ranking-summary">Participants are users with a score in the selected completed run or aggregate.</p>
+          <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Participant</th><th>Points</th><th>Correct</th><th>Wrong</th><th>Answered</th></tr></thead><tbody id="ranking-body"></tbody></table></div>
+          <button id="ranking-more" class="secondary load-more" hidden>Load more</button>
+        </article>
+      </section>
+
+      <section id="view-settings" class="view">
+        <article class="panel settings-panel">
+          <h2>Management credentials</h2>
+          <p class="muted">The dashboard uses these credentials to request short-lived access tokens for protected endpoints. They remain in this browser's local storage and are never sent anywhere except this API.</p>
+          <p class="muted">This form does not create an account. For first-time setup, create the administrator from the project terminal with <code>ADMIN_USERNAME=admin ADMIN_PASSWORD=quiz42 npm run admin:create</code>, then enter the same values below.</p>
+          <form id="credentials-form">
+            <label>Username<input id="credential-username" autocomplete="username" minlength="3" required></label>
+            <label>Password<input id="credential-password" type="password" autocomplete="current-password" minlength="6" required></label>
+            <div class="form-actions"><button class="primary" type="submit">Save and connect</button><button class="danger-text" id="clear-credentials" type="button">Clear credentials</button></div>
+          </form>
+          <div id="credential-status" class="credential-status">No credentials configured.</div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="quiz-dialog">
+    <form id="quiz-form" method="dialog">
+      <div class="dialog-title"><div><p class="eyebrow">Quiz definition</p><h2 id="quiz-dialog-title">New quiz</h2></div><button class="icon-button" value="cancel" formnovalidate aria-label="Close">×</button></div>
+      <input id="quiz-id" type="hidden"><input id="quiz-version" type="hidden">
+      <label>Name<input id="quiz-name" maxlength="120" required></label>
+      <label>Description<textarea id="quiz-description" maxlength="4000" rows="4" required></textarea></label>
+      <div class="field-row"><label>Language<select id="quiz-language" required><option value="en">English</option><option value="pt-BR">Português (Brasil)</option></select></label><label>Question duration (seconds)<input id="quiz-duration" type="number" value="40" min="10" max="600" required></label></div>
+      <div class="form-actions"><button class="secondary" value="cancel" formnovalidate>Cancel</button><button class="primary" id="save-quiz" value="default">Save quiz</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="question-dialog">
+    <form id="question-form" method="dialog">
+      <div class="dialog-title"><div><p class="eyebrow">Question</p><h2 id="question-dialog-title">Add question</h2></div><button class="icon-button" value="cancel" formnovalidate aria-label="Close">×</button></div>
+      <input id="question-id" type="hidden"><input id="question-version" type="hidden">
+      <label>Prompt<textarea id="question-prompt" maxlength="4000" rows="3" required></textarea></label>
+      <div class="field-row"><label>Duration (optional)<input id="question-duration" type="number" min="10" max="600" placeholder="Use quiz default"></label><label>Points<input id="question-points" type="number" value="1" min="1" max="1000" required></label><label>Prize ($ZEC)<input id="question-prize" type="number" value="0" min="0" max="1000000" step="0.00000001" required></label></div>
+      <fieldset><legend>Options <small>Choose the correct answer</small></legend><div id="option-fields"></div></fieldset>
+      <div class="form-actions"><button class="secondary" value="cancel" formnovalidate>Cancel</button><button class="primary" value="default">Save question</button></div>
+    </form>
+  </dialog>
+  <script src="/dashboard/app.js" defer></script>
+</body>
+</html>

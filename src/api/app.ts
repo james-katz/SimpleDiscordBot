@@ -17,6 +17,7 @@ import { registerAuthRoutes } from './routes/auth-routes';
 import { registerRankingRoutes } from './routes/ranking-routes';
 import { registerRankingSeasonRoutes } from './routes/ranking-season-routes';
 import { registerTriviaRoutes } from './routes/trivia-routes';
+import { registerDashboardRoutes } from './routes/dashboard-routes';
 
 export async function buildApi(config: AppConfig, models: PlatformModels): Promise<FastifyInstance> {
   const app = Fastify({
@@ -88,6 +89,8 @@ export async function buildApi(config: AppConfig, models: PlatformModels): Promi
       return reply.code(503).send({ status: 'not-ready' });
     }
   });
+
+  await registerDashboardRoutes(app);
 
   await registerAuthRoutes(app, new AuthService(models, config), config);
   await registerTriviaRoutes(app, new TriviaService(models), new IdempotencyService(models), config);

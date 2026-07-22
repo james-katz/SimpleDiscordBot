@@ -7,13 +7,13 @@ import { defineModels } from './models';
 import * as initialSchema from './migrations/001-initial-platform-schema';
 import * as platformFeatures from './migrations/002-idempotency-and-ranking-seasons';
 
-export async function createDatabase(config: Pick<AppConfig, 'databasePath' | 'nodeEnv'>) {
+export async function createDatabase(config: Pick<AppConfig, 'databasePath'> & Partial<Pick<AppConfig, 'sqlLogging'>>) {
   await mkdir(path.dirname(config.databasePath), { recursive: true });
 
   const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: config.databasePath,
-    logging: config.nodeEnv === 'development' ? (sql) => console.debug(sql) : false,
+    logging: config.sqlLogging ? (sql) => console.debug(sql) : false,
   });
 
   const models = defineModels(sequelize);

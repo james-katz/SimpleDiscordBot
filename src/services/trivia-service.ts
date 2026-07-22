@@ -16,13 +16,13 @@ type JsonObject = Record<string, unknown>;
 export class TriviaService {
   constructor(private readonly models: PlatformModels) {}
 
-  async list({ status, isLegacy, limit = 50, cursor }: { status?: string; isLegacy?: boolean; limit?: number; cursor?: string } = {}) {
+  async list({ status, limit = 50, cursor }: { status?: string; limit?: number; cursor?: string } = {}) {
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     const decoded = decodeCursor<{ createdAt: string; id: string }>(cursor);
     if (decoded && (typeof decoded.createdAt !== 'string' || typeof decoded.id !== 'string' || Number.isNaN(Date.parse(decoded.createdAt)))) {
       throw new ValidationError('Pagination cursor is invalid');
     }
-    const baseWhere = { ...(status ? { status } : {}), ...(isLegacy === undefined ? {} : { isLegacy }) };
+    const baseWhere = { ...(status ? { status } : {}) };
     const where = {
       ...baseWhere,
       ...(decoded ? {
@@ -59,7 +59,7 @@ export class TriviaService {
     const trivia = await this.findFull(id);
     const json = trivia.toJSON() as JsonObject;
     if (publicView) {
-      if (trivia.get('status') !== 'published' || trivia.get('isLegacy')) throw new NotFoundError('Trivia');
+      if (trivia.get('status') !== 'published') throw new NotFoundError('Trivia');
       return {
         id: json.id,
         name: json.name,
@@ -86,7 +86,6 @@ export class TriviaService {
         status: 'draft',
         defaultQuestionDurationSeconds: valid.defaultQuestionDurationSeconds,
         version: 1,
-        isLegacy: false,
         createdByApiUserId: apiUserId,
       }, { transaction });
 

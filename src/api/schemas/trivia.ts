@@ -1,3 +1,5 @@
+import { TRIVIA_LANGUAGE_CODES } from '../../domain/trivia/languages';
+
 export const optionInputSchema = {
   type: 'object',
   additionalProperties: false,
@@ -28,7 +30,7 @@ export const triviaCreateSchema = {
   properties: {
     name: { type: 'string', minLength: 1, maxLength: 120 },
     description: { type: 'string', minLength: 1, maxLength: 4000 },
-    language: { type: 'string', minLength: 2, maxLength: 35, default: 'en' },
+    language: { type: 'string', enum: TRIVIA_LANGUAGE_CODES, default: 'en' },
     defaultQuestionDurationSeconds: { type: 'integer', minimum: 10, maximum: 600, default: 40 },
     questions: { type: 'array', maxItems: 500, items: questionInputSchema, default: [] },
   },
@@ -42,7 +44,7 @@ export const triviaPatchSchema = {
     version: { type: 'integer', minimum: 1 },
     name: { type: 'string', minLength: 1, maxLength: 120 },
     description: { type: 'string', minLength: 1, maxLength: 4000 },
-    language: { type: 'string', minLength: 2, maxLength: 35 },
+    language: { type: 'string', enum: TRIVIA_LANGUAGE_CODES },
     defaultQuestionDurationSeconds: { type: 'integer', minimum: 10, maximum: 600 },
   },
 } as const;

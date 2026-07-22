@@ -1,4 +1,5 @@
 import { ValidationError } from '../errors';
+import { normalizeTriviaLanguage, type TriviaLanguage } from './languages';
 
 export type QuestionOptionInput = {
   text: string;
@@ -20,6 +21,12 @@ export type TriviaInput = {
   defaultQuestionDurationSeconds?: number;
   questions?: QuestionInput[];
 };
+
+function triviaLanguage(value: unknown): TriviaLanguage {
+  const language = normalizeTriviaLanguage(value);
+  if (language) return language;
+  throw new ValidationError('Trivia language must be en or pt-BR');
+}
 
 function requiredText(value: unknown, field: string, maximum: number): string {
   if (typeof value !== 'string' || value.trim().length === 0) {
@@ -73,10 +80,7 @@ export function validateQuestion(input: QuestionInput): Required<Omit<QuestionIn
 
 export function validateTrivia(input: TriviaInput): Required<Omit<TriviaInput, 'questions'>> & { questions: ReturnType<typeof validateQuestion>[] } {
   if (!input || typeof input !== 'object') throw new ValidationError('Trivia must be an object');
-  const language = input.language ?? 'en';
-  if (!/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(language)) {
-    throw new ValidationError('Trivia language must be a valid language tag');
-  }
+  const language = triviaLanguage(input.language ?? 'en');
 
   return {
     name: requiredText(input.name, 'Trivia name', 120),
@@ -105,10 +109,7 @@ export function validateTriviaPatch(input: Record<string, unknown>) {
   if ('name' in input) patch.name = requiredText(input.name, 'Trivia name', 120);
   if ('description' in input) patch.description = requiredText(input.description, 'Trivia description', 4000);
   if ('language' in input) {
-    if (typeof input.language !== 'string' || !/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(input.language)) {
-      throw new ValidationError('Trivia language must be a valid language tag');
-    }
-    patch.language = input.language;
+    patch.language = triviaLanguage(input.language);
   }
   if ('defaultQuestionDurationSeconds' in input) {
     patch.defaultQuestionDurationSeconds = boundedInteger(
